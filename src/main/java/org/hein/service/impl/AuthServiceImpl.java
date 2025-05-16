@@ -28,12 +28,9 @@ public class AuthServiceImpl implements AuthService {
         Role role = roleRepository.findByName(RoleEnum.USER.toString()).orElseThrow(() -> new ApiBusinessException("Role User not found"));
 
         User user = User.builder()
-                .userId(candidate.getUserId())
                 .email(candidate.getEmail())
                 .username(userRegistrationRequest.username())
                 .password(passwordEncoder.encode(userRegistrationRequest.password()))
-                .country(userRegistrationRequest.country())
-                .isVerified(true)
                 .build();
         user.addRole(role);
         User savedUser = userService.save(user);

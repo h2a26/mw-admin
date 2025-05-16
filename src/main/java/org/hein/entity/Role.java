@@ -1,32 +1,77 @@
 package org.hein.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hein.utils.AuditableEntity;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+@Entity
+@Table(name = "roles", indexes = {
+        @Index(name = "idx_role_name", columnList = "name", unique = true)
+})
+@Cache(region = "role", usage = CacheConcurrencyStrategy.READ_WRITE)
 @Getter
 @Setter
-@Entity
-@Table(name = "ROLES")
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Role {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long roleId;
-
-    @Column(unique = true, nullable = false)
+@NamedEntityGraphs({
+        @NamedEntityGraph(
+                name = "Role.withPermissions",
+                attributeNodes = @NamedAttributeNode("rolePermissions")
+        )
+})
+public class Role extends AuditableEntity {
+    @Column(nullable = false, unique = true)
     private String name;
 
+    private String description;
+
     @Builder.Default
-    @ManyToMany(cascade = CascadeType.MERGE)
-    @JoinTable(
-            name = "role_permissions",
-            joinColumns = @JoinColumn(name = "role_id"),
-            inverseJoinColumns = @JoinColumn(name = "permission_id")
-    )
-    private List<Permission> permissions = new ArrayList<>();
+    private boolean systemRole = false;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "role", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private Set<RolePermission> rolePermissions = new HashSet<>();
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "role", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private Set<UserRole> userRoles = new HashSet<>();
+
+    @Transient
+    @JsonIgnore
+    private Set<Permission> permissions;
+
+    // Get all permissions (with caching)
+    @JsonIgnore
+    public Set<Permission> getPermissions() {
+        if (this.permissions == null) {
+            this.permissions = rolePermissions.stream()
+                    .map(RolePermission::getPermission)
+                    .collect(Collectors.toSet());
+        }
+        return this.permissions;
+    }
+
+    // Add permission helper
+    public void addPermission(Permission permission) {
+        if (rolePermissions.stream().noneMatch(rp -> rp.getPermission().equals(permission))) {
+            rolePermissions.add(new RolePermission(this, permission));
+            this.permissions = null; // Invalidate cache
+        }
+    }
+
+    // Remove permission helper
+    public void removePermission(Permission permission) {
+        rolePermissions.removeIf(rp -> rp.getPermission().equals(permission));
+        this.permissions = null; // Invalidate cache
+    }
 }

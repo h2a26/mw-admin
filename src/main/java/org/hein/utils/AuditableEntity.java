@@ -1,40 +1,37 @@
 package org.hein.utils;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.MappedSuperclass;
-import jakarta.persistence.Version;
-import lombok.Data;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 
-@Data
 @MappedSuperclass
-@EntityListeners(value = AuditingEntityListener.class)
+@Getter
+@Setter
 public abstract class AuditableEntity {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     @CreatedDate
-    @Column(name = "created_at")
-    private Instant createdAt;
+    @Column(updatable = false)
+    private LocalDateTime createdAt;
 
     @LastModifiedDate
-    @Column(name = "updated_at")
-    private Instant updatedAt;
+    private LocalDateTime updatedAt;
+
+    @Version
+    private Long version;
 
     @CreatedBy
-    @Column(name = "created_by")
     private String createdBy;
 
     @LastModifiedBy
-    @Column(name = "updated_by")
-    private String updatedBy;
-
-    @Version
-    @Column(name = "version")
-    private Long version = 0L;
+    private String modifiedBy;
 }
