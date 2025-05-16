@@ -8,6 +8,7 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -22,12 +23,6 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@NamedEntityGraphs({
-        @NamedEntityGraph(
-                name = "User.withRoles",
-                attributeNodes = @NamedAttributeNode("userRoles")
-        )
-})
 public class User extends AuditableEntity {
     @Column(nullable = false, unique = true)
     private String username;
@@ -36,28 +31,27 @@ public class User extends AuditableEntity {
     @JsonIgnore
     private String password;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String email;
 
     private String firstName;
     private String lastName;
 
+    @Column(nullable = false)
     @Builder.Default
-    private boolean active = true;
+    private boolean enabled = true;
 
+    @Column(nullable = false)
     @Builder.Default
-    private boolean accountNonExpired = true;
+    private boolean locked = false;
 
+    @Column(nullable = false)
     @Builder.Default
-    private boolean accountNonLocked = true;
+    private boolean expired = false;
 
+    @Column(nullable = false)
     @Builder.Default
-    private boolean credentialsNonExpired = true;
-
-    @Builder.Default
-    private boolean mfaEnabled = false;
-
-    private String mfaSecret;
+    private boolean credentialsExpired = false;
 
     @JsonIgnore
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -68,11 +62,7 @@ public class User extends AuditableEntity {
     @JsonIgnore
     private Set<Role> roles;
 
-    @Transient
-    @JsonIgnore
-    private Set<Permission> permissions;
-
-    // Helper method to get all roles (with caching)
+    // Get all roles (with caching)
     @JsonIgnore
     public Set<Role> getAllRoles() {
         if (this.roles == null) {
@@ -83,23 +73,11 @@ public class User extends AuditableEntity {
         return this.roles;
     }
 
-    // Helper method to get all permissions (with caching)
-    @JsonIgnore
-    public Set<Permission> getAllPermissions() {
-        if (this.permissions == null) {
-            this.permissions = getAllRoles().stream()
-                    .flatMap(role -> role.getPermissions().stream())
-                    .collect(Collectors.toSet());
-        }
-        return this.permissions;
-    }
-
     // Add role helper
     public void addRole(Role role) {
         if (userRoles.stream().noneMatch(ur -> ur.getRole().equals(role))) {
-            userRoles.add(new UserRole(this, role));
+            userRoles.add(UserRole.create(this, role));
             this.roles = null; // Invalidate cache
-            this.permissions = null;
         }
     }
 
@@ -107,12 +85,64 @@ public class User extends AuditableEntity {
     public void removeRole(Role role) {
         userRoles.removeIf(ur -> ur.getRole().equals(role));
         this.roles = null; // Invalidate cache
-        this.permissions = null;
     }
 
-    // Check if user has permission
-    public boolean hasPermission(String permissionName) {
-        return getAllPermissions().stream()
-                .anyMatch(p -> p.getName().equals(permissionName));
+    // Check if user has permission for feature
+    public boolean hasPermission(Feature feature, Action action) {
+        return getAllRoles().stream()
+                .anyMatch(role -> role.hasPermission(feature, action));
+    }
+
+    // Get all features accessible by this user
+    public Set<Feature> getAccessibleFeatures() {
+        return getAllRoles().stream()
+                .flatMap(role -> role.getAccessibleFeatures().stream())
+                .collect(Collectors.toSet());
+    }
+
+    // Get all actions for a feature
+    public Set<Action> getActionsForFeature(Feature feature) {
+        return getAllRoles().stream()
+                .map(role -> role.getActionsForFeature(feature))
+                .flatMap(Set::stream)
+                .collect(Collectors.toSet());
+    }
+
+    // Get all permissions for a feature
+    public Set<Permission> getPermissionsForFeature(Feature feature) {
+        return getAllRoles().stream()
+                .flatMap(role -> role.getPermissions().stream())
+                .filter(permission -> permission.getFeature().equals(feature))
+                .collect(Collectors.toSet());
+    }
+
+    // Get all permissions across all features
+    public Set<Permission> getAllPermissions() {
+        return getAllRoles().stream()
+                .flatMap(role -> role.getPermissions().stream())
+                .collect(Collectors.toSet());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        User user = (User) o;
+        return username.equals(user.username);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(username);
+    }
+
+    public static User create(String username, String password, String email, String firstName, String lastName) {
+        return User.builder()
+                .username(username)
+                .password(password)
+                .email(email)
+                .firstName(firstName)
+                .lastName(lastName)
+                .build();
     }
 }

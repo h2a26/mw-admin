@@ -46,6 +46,11 @@ public class Role extends AuditableEntity {
     @Builder.Default
     private Set<UserRole> userRoles = new HashSet<>();
 
+    @JsonIgnore
+    @OneToMany(mappedBy = "role", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private Set<RoleFeature> roleFeatures = new HashSet<>();
+
     @Transient
     @JsonIgnore
     private Set<Permission> permissions;
@@ -73,5 +78,50 @@ public class Role extends AuditableEntity {
     public void removePermission(Permission permission) {
         rolePermissions.removeIf(rp -> rp.getPermission().equals(permission));
         this.permissions = null; // Invalidate cache
+    }
+
+    // Add feature with actions
+    public void addFeature(Feature feature, Action... actions) {
+        RoleFeature roleFeature = roleFeatures.stream()
+                .filter(rf -> rf.getFeature().equals(feature))
+                .findFirst()
+                .orElse(null);
+
+        if (roleFeature == null) {
+            roleFeature = RoleFeature.create(this, feature, actions);
+            roleFeatures.add(roleFeature);
+        } else {
+            for (Action action : actions) {
+                roleFeature.addAction(action);
+            }
+        }
+    }
+
+    // Remove feature
+    public void removeFeature(Feature feature) {
+        roleFeatures.removeIf(rf -> rf.getFeature().equals(feature));
+    }
+
+    // Check if role has permission for feature
+    public boolean hasPermission(Feature feature, Action action) {
+        return roleFeatures.stream()
+                .filter(rf -> rf.getFeature().equals(feature))
+                .anyMatch(rf -> rf.hasAction(action));
+    }
+
+    // Get all features accessible by this role
+    public Set<Feature> getAccessibleFeatures() {
+        return roleFeatures.stream()
+                .map(RoleFeature::getFeature)
+                .collect(Collectors.toSet());
+    }
+
+    // Get all actions for a feature
+    public Set<Action> getActionsForFeature(Feature feature) {
+        return roleFeatures.stream()
+                .filter(rf -> rf.getFeature().equals(feature))
+                .findFirst()
+                .map(RoleFeature::getAllowedActions)
+                .orElse(Set.of());
     }
 }

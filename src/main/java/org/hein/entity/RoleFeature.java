@@ -7,9 +7,8 @@ import org.hein.utils.AuditableEntity;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Builder
 @Entity
@@ -34,32 +33,39 @@ public class RoleFeature extends AuditableEntity {
 
     @ElementCollection
     @CollectionTable(
-            name = "role_feature_permissions",
+            name = "role_feature_actions",
             joinColumns = {
                     @JoinColumn(name = "role_feature_id", referencedColumnName = "id")
             }
     )
-    @Column(name = "permission_name")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "action")
     @Builder.Default
-    private Set<String> allowedActions = new HashSet<>();
+    private Set<Action> allowedActions = new HashSet<>();
 
     @Builder
-    public RoleFeature(Role role, Feature feature, Set<String> allowedActions) {
+    public RoleFeature(Role role, Feature feature, Set<Action> allowedActions) {
         this.role = role;
         this.feature = feature;
         this.allowedActions = allowedActions != null ? allowedActions : new HashSet<>();
     }
 
-    public void addAction(String action) {
+    public void addAction(Action action) {
         allowedActions.add(action);
     }
 
-    public void removeAction(String action) {
+    public void removeAction(Action action) {
         allowedActions.remove(action);
     }
 
-    public boolean hasAction(String action) {
+    public boolean hasAction(Action action) {
         return allowedActions.contains(action);
+    }
+
+    public Set<String> getAllowedActionNames() {
+        return allowedActions.stream()
+                .map(Action::getName)
+                .collect(Collectors.toSet());
     }
 
     @Override
@@ -74,6 +80,14 @@ public class RoleFeature extends AuditableEntity {
     @Override
     public int hashCode() {
         return Objects.hash(role.getId(), feature.getId());
+    }
+
+    public static RoleFeature create(Role role, Feature feature, Action... actions) {
+        return RoleFeature.builder()
+                .role(role)
+                .feature(feature)
+                .allowedActions(new HashSet<>(Arrays.asList(actions)))
+                .build();
     }
 }
 
