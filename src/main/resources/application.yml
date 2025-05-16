@@ -1,0 +1,44 @@
+server:
+  servlet:
+    context-path: /mw-admin
+
+spring:
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2000ms
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/mw-admin-db
+    username: mw-admin-usr
+    password: mw-admin-pwd
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    defer-datasource-initialization: true
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
+
+  sql:
+    init:
+      mode: always
+
+logging:
+  level:
+    org.springframework.jdbc.datasource.init: DEBUG
+
+app:
+  token:
+    secret: CJxD7RA0InBYKIAyyq0LdgyqUFS4vXNkntiGvnjNe2Nkpzfe1PGdyISMDfMmxtxFc5yE7zBOjLBA/kKdoLEd0Q==
+    issuer: org.hein
+    expiration:
+      access: 2
+      refresh: 1500
+    role:
+      key: rol
+    type:
+      key: typ
