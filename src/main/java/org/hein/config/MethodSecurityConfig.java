@@ -9,7 +9,10 @@ import org.springframework.security.access.expression.method.MethodSecurityExpre
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 
 @Configuration
-@EnableMethodSecurity
+@EnableMethodSecurity(
+    securedEnabled = true,
+    jsr250Enabled = true
+)
 public class MethodSecurityConfig {
     private final PermissionEvaluator customPermissionEvaluator;
 
