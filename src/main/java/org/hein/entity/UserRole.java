@@ -14,8 +14,7 @@ import java.util.Set;
 @Entity
 @Table(name = "user_roles",
         indexes = {
-                @Index(name = "idx_user_role", columnList = "user_id,role_id", unique = true),
-                @Index(name = "idx_user_role_status", columnList = "user_id,status")
+                @Index(name = "idx_user_role", columnList = "user_id,role_id", unique = true)
         }
 )
 @Cache(region = "userRole", usage = CacheConcurrencyStrategy.READ_WRITE)
