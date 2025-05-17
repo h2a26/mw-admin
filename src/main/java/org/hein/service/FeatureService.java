@@ -8,8 +8,8 @@ import java.util.List;
 public interface FeatureService {
     FeatureResponse create(FeatureRequest request);
     FeatureResponse update(Long id, FeatureRequest request);
-    void delete(Long id);
-    FeatureResponse getById(Long id);
-    List<FeatureResponse> getAll();
+    void deleteById(Long id);
+    FeatureResponse findById(Long id);
+    List<FeatureResponse> findAll();
 }
 

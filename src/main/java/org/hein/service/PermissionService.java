@@ -8,6 +8,7 @@ import java.util.List;
 public interface PermissionService {
 
     PermissionResponse create(PermissionRequest request);
+    PermissionResponse update(Long id, PermissionRequest request);
     List<PermissionResponse> findAll();
     PermissionResponse findById(Long id);
     void deleteById(Long id);

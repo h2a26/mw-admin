@@ -45,6 +45,27 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
+    public RoleResponse update(Long id, RoleRequest request) {
+        Role role = roleRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Role not found with id: " + id));
+
+        Set<Permission> permissions = new HashSet<>(permissionRepository.findAllById(request.permissionIds()));
+        if (permissions.size() != request.permissionIds().size()) {
+            throw new IllegalArgumentException("One or more permission IDs are invalid.");
+        }
+
+        role.setName(request.name());
+        role.setDescription(request.description());
+
+        // Clear existing permissions and add new ones
+        role.getRolePermissions().clear();
+        permissions.forEach(role::addPermission);
+
+        return RoleResponse.from(roleRepository.save(role));
+    }
+
+
+    @Override
     public List<RoleResponse> findAll() {
         return roleRepository.findAll().stream()
                 .map(RoleResponse::from)

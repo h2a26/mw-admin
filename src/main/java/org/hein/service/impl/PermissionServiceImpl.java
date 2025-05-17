@@ -39,6 +39,21 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     @Override
+    public PermissionResponse update(Long id, PermissionRequest request) {
+        Permission existing = permissionRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Permission not found with id: " + id));
+
+        Feature feature = featureRepository.findById(request.featureId())
+                .orElseThrow(() -> new IllegalArgumentException("Feature not found with id: " + request.featureId()));
+
+        existing.setFeature(feature);
+        existing.setAction(Action.valueOf(request.action()));
+
+        return PermissionResponse.from(permissionRepository.save(existing));
+    }
+
+
+    @Override
     public List<PermissionResponse> findAll() {
         return permissionRepository.findAll().stream()
                 .map(PermissionResponse::from)

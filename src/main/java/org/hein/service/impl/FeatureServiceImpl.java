@@ -38,19 +38,19 @@ public class FeatureServiceImpl implements FeatureService {
     }
 
     @Override
-    public void delete(Long id) {
+    public void deleteById(Long id) {
         featureRepository.deleteById(id);
     }
 
     @Override
-    public FeatureResponse getById(Long id) {
+    public FeatureResponse findById(Long id) {
         return featureRepository.findById(id)
                 .map(FeatureResponse::from)
                 .orElseThrow(() -> new IllegalArgumentException("Feature not found."));
     }
 
     @Override
-    public List<FeatureResponse> getAll() {
+    public List<FeatureResponse> findAll() {
         return featureRepository.findAll().stream()
                 .map(FeatureResponse::from)
                 .toList();
