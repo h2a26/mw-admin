@@ -19,27 +19,23 @@ import java.util.Objects;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class RolePermission extends AuditableEntity {
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "role_id", nullable = false)
-    @JsonIgnore
+    @JsonIgnore // Avoid recursion rolePermission -> role -> rolePermission
     private Role role;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "permission_id", nullable = false)
     private Permission permission;
 
-    @Builder
-    public RolePermission(Role role, Permission permission) {
-        this.role = role;
-        this.permission = permission;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        RolePermission that = (RolePermission) o;
+        if (!(o instanceof RolePermission that)) return false;
         return Objects.equals(role.getId(), that.role.getId()) &&
                 Objects.equals(permission.getId(), that.permission.getId());
     }

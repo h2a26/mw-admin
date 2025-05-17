@@ -7,9 +7,7 @@ import org.hein.utils.AuditableEntity;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Entity
@@ -24,34 +22,27 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @Builder
 public class User extends AuditableEntity {
+
     @Column(nullable = false, unique = true)
     private String username;
 
     @Column(nullable = false)
-    @JsonIgnore
-    private String password;
+    private String firstName;
 
     @Column(nullable = false)
-    private String email;
-
-    private String firstName;
     private String lastName;
 
     @Column(nullable = false)
-    @Builder.Default
+    private String password;
+
+    @Column(nullable = false, unique = true)
+    private String email;
+
+    @Column(nullable = false)
     private boolean enabled = true;
 
     @Column(nullable = false)
-    @Builder.Default
     private boolean locked = false;
-
-    @Column(nullable = false)
-    @Builder.Default
-    private boolean expired = false;
-
-    @Column(nullable = false)
-    @Builder.Default
-    private boolean credentialsExpired = false;
 
     @JsonIgnore
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -60,89 +51,71 @@ public class User extends AuditableEntity {
 
     @Transient
     @JsonIgnore
-    private Set<Role> roles;
+    private Set<Role> allRolesCache;
 
-    // Get all roles (with caching)
+    /**
+     * Get all roles assigned to the user.
+     * Should be called inside transaction/session to avoid lazy loading issues.
+     */
     @JsonIgnore
     public Set<Role> getAllRoles() {
-        if (this.roles == null) {
-            this.roles = userRoles.stream()
+        if (allRolesCache == null) {
+            allRolesCache = userRoles.stream()
                     .map(UserRole::getRole)
                     .collect(Collectors.toSet());
         }
-        return this.roles;
+        return allRolesCache;
     }
 
-    // Add role helper
-    public void addRole(Role role) {
-        if (userRoles.stream().noneMatch(ur -> ur.getRole().equals(role))) {
-            userRoles.add(UserRole.create(this, role));
-            this.roles = null; // Invalidate cache
-        }
-    }
-
-    // Remove role helper
-    public void removeRole(Role role) {
-        userRoles.removeIf(ur -> ur.getRole().equals(role));
-        this.roles = null; // Invalidate cache
-    }
-
-    // Check if user has permission for feature
+    /**
+     * Check if user has permission for a feature and action by checking all roles.
+     */
     public boolean hasPermission(Feature feature, Action action) {
         return getAllRoles().stream()
                 .anyMatch(role -> role.hasPermission(feature, action));
     }
 
-    // Get all features accessible by this user
+    /**
+     * Get all features accessible by user.
+     */
     public Set<Feature> getAccessibleFeatures() {
         return getAllRoles().stream()
                 .flatMap(role -> role.getAccessibleFeatures().stream())
                 .collect(Collectors.toSet());
     }
 
-    // Get all actions for a feature
+    /**
+     * Get all actions user can perform on a feature.
+     */
     public Set<Action> getActionsForFeature(Feature feature) {
         return getAllRoles().stream()
-                .map(role -> role.getActionsForFeature(feature))
-                .flatMap(Set::stream)
+                .flatMap(role -> role.getActionsForFeature(feature).stream())
                 .collect(Collectors.toSet());
     }
 
-    // Get all permissions for a feature
-    public Set<Permission> getPermissionsForFeature(Feature feature) {
-        return getAllRoles().stream()
-                .flatMap(role -> role.getPermissions().stream())
-                .filter(permission -> permission.getFeature().equals(feature))
-                .collect(Collectors.toSet());
+    // Add role helper
+    public void addRole(Role role) {
+        if (userRoles.stream().noneMatch(ur -> ur.getRole().equals(role))) {
+            userRoles.add(UserRole.create(this, role));
+            allRolesCache = null; // Invalidate cache
+        }
     }
 
-    // Get all permissions across all features
-    public Set<Permission> getAllPermissions() {
-        return getAllRoles().stream()
-                .flatMap(role -> role.getPermissions().stream())
-                .collect(Collectors.toSet());
+    // Remove role helper
+    public void removeRole(Role role) {
+        userRoles.removeIf(ur -> ur.getRole().equals(role));
+        allRolesCache = null; // Invalidate cache
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        User user = (User) o;
-        return username.equals(user.username);
+        if (!(o instanceof User that)) return false;
+        return Objects.equals(username, that.username);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(username);
-    }
-
-    public static User create(String username, String password, String email, String firstName, String lastName) {
-        return User.builder()
-                .username(username)
-                .password(password)
-                .email(email)
-                .firstName(firstName)
-                .lastName(lastName)
-                .build();
     }
 }

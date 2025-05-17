@@ -23,7 +23,7 @@ public enum Action {
 
     public static Action fromName(String name) {
         for (Action action : values()) {
-            if (action.getName().equals(name)) {
+            if (action.name.equalsIgnoreCase(name)) {
                 return action;
             }
         }

@@ -10,7 +10,6 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Builder
 @Entity
 @Table(name = "role_features",
         indexes = {
@@ -21,17 +20,20 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class RoleFeature extends AuditableEntity {
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "role_id", nullable = false)
-    @JsonIgnore
+    @JsonIgnore // Avoid recursion roleFeature -> role -> roleFeature
     private Role role;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "feature_id", nullable = false)
     private Feature feature;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER) // Eager fetch to avoid lazy issues on actions
     @CollectionTable(
             name = "role_feature_actions",
             joinColumns = {
@@ -42,13 +44,6 @@ public class RoleFeature extends AuditableEntity {
     @Column(name = "action")
     @Builder.Default
     private Set<Action> allowedActions = new HashSet<>();
-
-    @Builder
-    public RoleFeature(Role role, Feature feature, Set<Action> allowedActions) {
-        this.role = role;
-        this.feature = feature;
-        this.allowedActions = allowedActions != null ? allowedActions : new HashSet<>();
-    }
 
     public void addAction(Action action) {
         allowedActions.add(action);
@@ -71,8 +66,7 @@ public class RoleFeature extends AuditableEntity {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        RoleFeature that = (RoleFeature) o;
+        if (!(o instanceof RoleFeature that)) return false;
         return Objects.equals(role.getId(), that.role.getId()) &&
                 Objects.equals(feature.getId(), that.feature.getId());
     }
@@ -90,4 +84,3 @@ public class RoleFeature extends AuditableEntity {
                 .build();
     }
 }
-

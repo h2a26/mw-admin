@@ -7,8 +7,7 @@ import org.hein.utils.AuditableEntity;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Entity
@@ -28,6 +27,7 @@ import java.util.stream.Collectors;
         )
 })
 public class Role extends AuditableEntity {
+
     @Column(nullable = false, unique = true)
     private String name;
 
@@ -55,7 +55,9 @@ public class Role extends AuditableEntity {
     @JsonIgnore
     private Set<Permission> permissions;
 
-    // Get all permissions (with caching)
+    /**
+     * Fetch permissions cached, call within transaction to avoid lazy issues
+     */
     @JsonIgnore
     public Set<Permission> getPermissions() {
         if (this.permissions == null) {
@@ -69,15 +71,15 @@ public class Role extends AuditableEntity {
     // Add permission helper
     public void addPermission(Permission permission) {
         if (rolePermissions.stream().noneMatch(rp -> rp.getPermission().equals(permission))) {
-            rolePermissions.add(new RolePermission(this, permission));
-            this.permissions = null; // Invalidate cache
+            rolePermissions.add(RolePermission.builder().role(this).permission(permission).build());
+            this.permissions = null; // invalidate cache
         }
     }
 
     // Remove permission helper
     public void removePermission(Permission permission) {
         rolePermissions.removeIf(rp -> rp.getPermission().equals(permission));
-        this.permissions = null; // Invalidate cache
+        this.permissions = null; // invalidate cache
     }
 
     // Add feature with actions
@@ -102,26 +104,38 @@ public class Role extends AuditableEntity {
         roleFeatures.removeIf(rf -> rf.getFeature().equals(feature));
     }
 
-    // Check if role has permission for feature
+    // Check permission
     public boolean hasPermission(Feature feature, Action action) {
         return roleFeatures.stream()
                 .filter(rf -> rf.getFeature().equals(feature))
                 .anyMatch(rf -> rf.hasAction(action));
     }
 
-    // Get all features accessible by this role
+    // Get accessible features
     public Set<Feature> getAccessibleFeatures() {
         return roleFeatures.stream()
                 .map(RoleFeature::getFeature)
                 .collect(Collectors.toSet());
     }
 
-    // Get all actions for a feature
+    // Get allowed actions for feature
     public Set<Action> getActionsForFeature(Feature feature) {
         return roleFeatures.stream()
                 .filter(rf -> rf.getFeature().equals(feature))
                 .findFirst()
                 .map(RoleFeature::getAllowedActions)
-                .orElse(Set.of());
+                .orElse(Collections.emptySet());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Role that)) return false;
+        return Objects.equals(name, that.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name);
     }
 }

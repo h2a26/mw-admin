@@ -8,10 +8,9 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Objects;
+import java.util.Set;
 
-@Builder
-@AllArgsConstructor
 @Entity
 @Table(name = "user_roles",
         indexes = {
@@ -23,6 +22,8 @@ import java.util.*;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class UserRole extends AuditableEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -62,22 +63,18 @@ public class UserRole extends AuditableEntity {
                 .build();
     }
 
-    // Get all permissions for this user-role combination
     public Set<Permission> getPermissions() {
         return role.getPermissions();
     }
 
-    // Get all features accessible by this user-role combination
     public Set<Feature> getAccessibleFeatures() {
         return role.getAccessibleFeatures();
     }
 
-    // Check if this user-role combination has permission for a feature
     public boolean hasPermission(Feature feature, Action action) {
         return role.hasPermission(feature, action);
     }
 
-    // Get all actions for a feature
     public Set<Action> getActionsForFeature(Feature feature) {
         return role.getActionsForFeature(feature);
     }
@@ -85,8 +82,7 @@ public class UserRole extends AuditableEntity {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        UserRole that = (UserRole) o;
+        if (!(o instanceof UserRole that)) return false;
         return Objects.equals(user.getId(), that.user.getId()) &&
                 Objects.equals(role.getId(), that.role.getId());
     }
