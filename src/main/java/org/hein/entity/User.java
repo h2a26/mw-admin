@@ -101,6 +101,13 @@ public class User extends AuditableEntity {
         }
     }
 
+    public void clearRoles() {
+        for (UserRole userRole : new HashSet<>(userRoles)) {
+            userRole.getRole().getUserRoles().remove(userRole);
+        }
+        userRoles.clear();
+    }
+
     // Remove role helper
     public void removeRole(Role role) {
         userRoles.removeIf(ur -> ur.getRole().equals(role));
