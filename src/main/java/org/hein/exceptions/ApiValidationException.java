@@ -1,9 +1,14 @@
 package org.hein.exceptions;
 
+import lombok.Getter;
+
+import java.io.Serial;
 import java.util.List;
 
+@Getter
 public class ApiValidationException extends RuntimeException {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	private final List<String> messages;
@@ -13,7 +18,4 @@ public class ApiValidationException extends RuntimeException {
 		this.messages = messages;
 	}
 
-	public List<String> getMessages() {
-		return messages;
-	}
 }

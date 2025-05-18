@@ -5,6 +5,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.validation.BindingResult;
 
 @Aspect
@@ -20,7 +21,7 @@ public class ValidationResultAspect {
 		if(result.hasErrors()) {
 			throw new ApiValidationException(result.getFieldErrors()
 					.stream()
-					.map(a -> a.getDefaultMessage()).toList());
+					.map(DefaultMessageSourceResolvable::getDefaultMessage).toList());
 		}
 	}
 }

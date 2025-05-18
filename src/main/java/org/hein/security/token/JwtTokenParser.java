@@ -7,15 +7,17 @@ import org.hein.exceptions.ApiJwtTokenInvalidationException;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
+import org.hein.utils.TokenUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.util.StringUtils;
+import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.Arrays;
 
+@Component
 public class JwtTokenParser {
 
 	@Value("${app.token.secret}")
@@ -41,46 +43,41 @@ public class JwtTokenParser {
 	}
 
 	public Authentication parse(TokenType expectedType, String jwtToken) {
-		if (StringUtils.hasLength(jwtToken) && jwtToken.startsWith("Bearer ")) {
-			String token = jwtToken.replace("Bearer ", "");
+		try {
+			String token = TokenUtils.extractToken(jwtToken);
 
-			try {
-				var jwt = Jwts.parser()
-						.requireIssuer(issuer)
-						.verifyWith(secretKey)
-						.build()
-						.parseSignedClaims(token);
+			var jwt = Jwts.parser()
+					.requireIssuer(issuer)
+					.verifyWith(secretKey)
+					.build()
+					.parseSignedClaims(token);
 
-				var claims = jwt.getPayload();
+			var claims = jwt.getPayload();
 
-				var typeValue = claims.get(typeKey, String.class);
-				if (!expectedType.name().equals(typeValue)) {
-					throw new ApiJwtTokenInvalidationException("Invalid Token type");
-				}
-
-				var username = claims.getSubject();
-				var roles = Arrays.stream(claims.get(roleKey, String.class).split(","))
-						.map(SimpleGrantedAuthority::new).toList();
-
-				return UsernamePasswordAuthenticationToken.authenticated(username, null, roles);
-
-			} catch (ExpiredJwtException e) {
-				if (expectedType == TokenType.Access) {
-					throw new ApiJwtTokenExpirationException(e.getMessage());
-				} else {
-					throw new ApiJwtTokenInvalidationException("Expired refresh token", e);
-				}
-			} catch (JwtException e) {
-				throw new ApiJwtTokenInvalidationException("Invalid Token", e);
+			var typeValue = claims.get(typeKey, String.class);
+			if (!expectedType.name().equals(typeValue)) {
+				throw new ApiJwtTokenInvalidationException("Invalid Token type");
 			}
+
+			var username = claims.getSubject();
+			var roles = Arrays.stream(claims.get(roleKey, String.class).split(","))
+					.map(SimpleGrantedAuthority::new).toList();
+
+			return UsernamePasswordAuthenticationToken.authenticated(username, null, roles);
+
+		} catch (ExpiredJwtException e) {
+			if (expectedType == TokenType.Access) {
+				throw new ApiJwtTokenExpirationException("Expired access token.");
+			} else {
+				throw new ApiJwtTokenExpirationException("Expired refresh token.");
+			}
+		} catch (JwtException e) {
+			throw new ApiJwtTokenInvalidationException("Invalid Token", e);
 		}
-		return null;
 	}
 
 	public String extractJti(String token) {
-		if (StringUtils.hasLength(token) && token.startsWith("Bearer ")) {
-			token = token.replace("Bearer ", "");
-		}
+		token = TokenUtils.extractToken(token);
 		var claims = Jwts.parser()
 				.verifyWith(secretKey)
 				.build()
@@ -88,4 +85,5 @@ public class JwtTokenParser {
 				.getPayload();
 		return claims.get(jtiKey, String.class);
 	}
+
 }

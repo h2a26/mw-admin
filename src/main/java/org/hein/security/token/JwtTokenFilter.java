@@ -1,32 +1,41 @@
 package org.hein.security.token;
 
+import io.jsonwebtoken.JwtException;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import org.hein.commons.enum_.TokenType;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.hein.exceptions.ApiJwtTokenInvalidationException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+@Component
+@RequiredArgsConstructor
 public class JwtTokenFilter extends OncePerRequestFilter{
-	
-	@Autowired
-	private JwtTokenParser jwtTokenParser;
+
+	private final JwtTokenParser jwtTokenParser;
 
 	@Override
-	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+	protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,@NonNull FilterChain filterChain)
 			throws ServletException, IOException {
 
 		var jwtToken = request.getHeader("Authorization");
 
-		if(StringUtils.hasLength(jwtToken) && jwtToken.startsWith("Bearer ")) {
-			var authentication = jwtTokenParser.parse(TokenType.Access, jwtToken);
+		try{
+			if(StringUtils.hasLength(jwtToken) && jwtToken.startsWith("Bearer ")) {
+				var authentication = jwtTokenParser.parse(TokenType.Access, jwtToken);
 
-			SecurityContextHolder.getContext().setAuthentication(authentication);
+				SecurityContextHolder.getContext().setAuthentication(authentication);
+			}
+		}catch (JwtException ex) {
+			throw new ApiJwtTokenInvalidationException("Invalid Token. " + ex.getMessage());
 		}
 
 		filterChain.doFilter(request, response);

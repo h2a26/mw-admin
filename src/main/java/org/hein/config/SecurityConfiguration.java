@@ -10,11 +10,12 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.access.ExceptionTranslationFilter;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -33,7 +34,7 @@ public class SecurityConfiguration {
 											JwtTokenFilter jwtTokenFilter,
 											SecurityExceptionResolver securityExceptionResolver) throws Exception {
 		
-		http.csrf(csrf -> csrf.disable());
+		http.csrf(AbstractHttpConfigurer::disable);
 		http.cors(cors -> {});
 		
 		http.authorizeHttpRequests(req -> {
@@ -41,7 +42,7 @@ public class SecurityConfiguration {
 			req.anyRequest().authenticated();
 		});
 
-		http.addFilterAfter(jwtTokenFilter, ExceptionTranslationFilter.class);
+		http.addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class);
 		http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
 		http.exceptionHandling(ex -> {
@@ -55,26 +56,6 @@ public class SecurityConfiguration {
 	@Bean
 	AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
 		return config.getAuthenticationManager();
-	}
-
-	@Bean(initMethod = "initBean")
-	JwtTokenParser jwtTokenParser() {
-		return new JwtTokenParser();
-	}
-
-	@Bean
-	JwtTokenFilter jwtTokenFilter() {
-		return new JwtTokenFilter();
-	}
-
-	@Bean
-	SecurityExceptionResolver securityExceptionResolver() {
-		return new SecurityExceptionResolver();
-	}
-
-	@Bean(initMethod = "initBean")
-	JwtTokenGenerator jwtTokenGenerator() {
-		return new JwtTokenGenerator();
 	}
 
 	@Bean

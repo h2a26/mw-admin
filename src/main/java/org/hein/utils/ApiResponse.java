@@ -17,16 +17,14 @@ public class ApiResponse<T> {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Rangoon")
     private Date timeStamp;
     private int statusCode;
-    private HttpStatus httpStatus;
     private String message;
-    private T data;
+    private T payload;
 
-    public ApiResponse(T data, HttpStatus httpStatus) {
+    private ApiResponse(T payload, HttpStatus httpStatus) {
         this.timeStamp = new Date();
         this.statusCode = httpStatus.value();
-        this.httpStatus = httpStatus;
         this.message = httpStatus.getReasonPhrase().toUpperCase();
-        this.data = data;
+        this.payload = payload;
     }
 
     public static <T> ResponseEntity<ApiResponse<T>> of(T data) {
