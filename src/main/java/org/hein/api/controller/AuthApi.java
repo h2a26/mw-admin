@@ -2,6 +2,7 @@ package org.hein.api.controller;
 
 import org.hein.api.input.auth.TokenRefreshForm;
 import org.hein.api.input.auth.TokenRequestForm;
+import org.hein.api.input.auth.TokenRevokeForm;
 import org.hein.api.output.auth.TokenResponse;
 import org.hein.security.token.TokenManagementService;
 import org.hein.utils.ApiResponse;
@@ -30,5 +31,11 @@ public class AuthApi {
     public ResponseEntity<ApiResponse<TokenResponse>> refresh(@Validated @RequestBody TokenRefreshForm form, BindingResult result) {
         TokenResponse tokenResponse = tokenService.refresh(form);
         return ApiResponse.of(tokenResponse);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(@Validated @RequestBody TokenRevokeForm form, BindingResult result) {
+        tokenService.revoke(form);
+        return ApiResponse.of(null);
     }
 }
