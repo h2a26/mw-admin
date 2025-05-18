@@ -14,23 +14,20 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 public class TokenManagementService {
 
 	private final AuthenticationManager authenticationManager;
-
 	private final JwtTokenParser jwtTokenParser;
-
 	private final JwtTokenGenerator jwtTokenGenerator;
-
 	private final RefreshTokenStore refreshTokenStore;
+	private final UserService userService;
 
-    private final UserService userService;
-
-    @Transactional(readOnly = true)
+	@Transactional(readOnly = true)
 	public TokenResponse generate(TokenRequestForm form) {
-
 		var usernamePasswordToken = UsernamePasswordAuthenticationToken.unauthenticated(form.username(), form.password());
 		var authentication = authenticationManager.authenticate(usernamePasswordToken);
 
@@ -44,31 +41,39 @@ public class TokenManagementService {
 		var authentication = jwtTokenParser.parse(TokenType.Refresh, form.refreshToken());
 		var username = authentication.getName();
 
-		if (!refreshTokenStore.validate(form.refreshToken(), username)) {
+		var jti = jwtTokenParser.extractJti(form.refreshToken());
+
+		if (!refreshTokenStore.validate(jti, username)) {
 			throw new SecurityException("Invalid or expired refresh token.");
 		}
 
-		// Revoke old refresh token
-		refreshTokenStore.delete(form.refreshToken());
+		// Invalidate old token by matching jti
+		refreshTokenStore.deleteIfMatches(jti, username);
 
 		return generateTokens(authentication);
 	}
 
-
 	private TokenResponse generateTokens(Authentication authentication) {
-
 		var username = authentication.getName();
 		var user = userService.findByUsername(username);
 
-		var accessToken = jwtTokenGenerator.generate(TokenType.Access, authentication);
-		var refreshToken = jwtTokenGenerator.generate(TokenType.Refresh, authentication);
+		// Generate a new jti for refresh token
+		var refreshJti = UUID.randomUUID().toString();
 
-		refreshTokenStore.store(refreshToken, username, 30 * 24 * 60);
+		var accessToken = jwtTokenGenerator.generate(TokenType.Access, authentication);
+		var refreshToken = jwtTokenGenerator.generate(TokenType.Refresh, authentication, refreshJti);
+
+		refreshTokenStore.store(refreshJti, username);
 
 		return TokenResponse.from(user, accessToken, refreshToken);
 	}
 
 	public void revoke(TokenRevokeForm form) {
-		refreshTokenStore.delete(form.refreshToken());
+		var authentication = jwtTokenParser.parse(TokenType.Refresh, form.refreshToken());
+		var username = authentication.getName();
+		var jti = jwtTokenParser.extractJti(form.refreshToken());
+
+		// Only delete if jti matches current one
+		refreshTokenStore.deleteIfMatches(jti, username);
 	}
 }

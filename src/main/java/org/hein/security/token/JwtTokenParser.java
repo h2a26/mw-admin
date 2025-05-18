@@ -1,5 +1,6 @@
 package org.hein.security.token;
 
+import jakarta.annotation.PostConstruct;
 import org.hein.commons.enum_.TokenType;
 import org.hein.exceptions.ApiJwtTokenExpirationException;
 import org.hein.exceptions.ApiJwtTokenInvalidationException;
@@ -16,26 +17,32 @@ import javax.crypto.SecretKey;
 import java.util.Arrays;
 
 public class JwtTokenParser {
-	
+
 	@Value("${app.token.secret}")
 	private String secretKeyValue;
+
 	@Value("${app.token.issuer}")
 	private String issuer;
+
 	@Value("${app.token.role.key}")
 	private String roleKey;
+
 	@Value("${app.token.type.key}")
 	private String typeKey;
-	
+
+	@Value("${app.token.jti.key}")
+	private String jtiKey;
+
 	private SecretKey secretKey;
-	
+
+	@PostConstruct
 	public void initBean() {
 		this.secretKey = SecretKeys.stringToKey(secretKeyValue);
 	}
-	
-	public Authentication parse(TokenType type, String jwtToken) {
 
-		if(StringUtils.hasLength(jwtToken) && jwtToken.startsWith("Bearer ")) {
-			var token = jwtToken.replace("Bearer ", "");
+	public Authentication parse(TokenType expectedType, String jwtToken) {
+		if (StringUtils.hasLength(jwtToken) && jwtToken.startsWith("Bearer ")) {
+			String token = jwtToken.replace("Bearer ", "");
 
 			try {
 				var jwt = Jwts.parser()
@@ -43,25 +50,22 @@ public class JwtTokenParser {
 						.verifyWith(secretKey)
 						.build()
 						.parseSignedClaims(token);
-				
-				var typeValue = jwt.getPayload().get(typeKey);
-				
-				if(null == typeValue 
-						|| null == type 
-						|| !type.name().equals(typeValue)) {
+
+				var claims = jwt.getPayload();
+
+				var typeValue = claims.get(typeKey, String.class);
+				if (!expectedType.name().equals(typeValue)) {
 					throw new ApiJwtTokenInvalidationException("Invalid Token type");
 				}
-				
-				var username = jwt.getPayload().getSubject();
-				var roleString = jwt.getPayload().get(roleKey).toString();
-				
-				var authorities = Arrays.stream(roleString.split(","))
-						.map(a -> new SimpleGrantedAuthority(a)).toList();
-				
-				return UsernamePasswordAuthenticationToken.authenticated(username, null, authorities);
-				
+
+				var username = claims.getSubject();
+				var roles = Arrays.stream(claims.get(roleKey, String.class).split(","))
+						.map(SimpleGrantedAuthority::new).toList();
+
+				return UsernamePasswordAuthenticationToken.authenticated(username, null, roles);
+
 			} catch (ExpiredJwtException e) {
-				if(type == TokenType.Access) {
+				if (expectedType == TokenType.Access) {
 					throw new ApiJwtTokenExpirationException(e.getMessage());
 				} else {
 					throw new ApiJwtTokenInvalidationException("Expired refresh token", e);
@@ -70,8 +74,18 @@ public class JwtTokenParser {
 				throw new ApiJwtTokenInvalidationException("Invalid Token", e);
 			}
 		}
-		
 		return null;
 	}
 
+	public String extractJti(String token) {
+		if (StringUtils.hasLength(token) && token.startsWith("Bearer ")) {
+			token = token.replace("Bearer ", "");
+		}
+		var claims = Jwts.parser()
+				.verifyWith(secretKey)
+				.build()
+				.parseSignedClaims(token)
+				.getPayload();
+		return claims.get(jtiKey, String.class);
+	}
 }

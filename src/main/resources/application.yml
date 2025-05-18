@@ -42,3 +42,5 @@ app:
       key: rol
     type:
       key: typ
+    jti:
+      key: jti
