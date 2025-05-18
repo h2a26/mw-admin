@@ -28,7 +28,7 @@ public class TokenManagementService {
     @Transactional(readOnly = true)
 	public TokenResponse generate(TokenRequestForm form) {
 
-		var usernamePasswordToken = UsernamePasswordAuthenticationToken.unauthenticated(form.email(), form.password());
+		var usernamePasswordToken = UsernamePasswordAuthenticationToken.unauthenticated(form.username(), form.password());
 		var authentication = authenticationManager.authenticate(usernamePasswordToken);
 
 		SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -45,7 +45,7 @@ public class TokenManagementService {
 
 	private TokenResponse getResponse(Authentication authentication) {
 
-		var user = userService.findByEmail(authentication.getName());
+		var user = userService.findByUsername(authentication.getName());
 
 		var accessToken = jwtTokenGenerator.generate(TokenType.Access, authentication);
 		var refreshToken = jwtTokenGenerator.generate(TokenType.Refresh, authentication);

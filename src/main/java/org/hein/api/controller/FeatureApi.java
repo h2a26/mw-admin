@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/features")
+@RequestMapping("/api/v1/features")
 public class FeatureApi {
 
     private final FeatureService featureService;

@@ -37,11 +37,16 @@ public class AppUserDetailsService implements UserDetailsService {
 			throw new LockedException("User is locked");
 		}
 
-		return new org.springframework.security.core.userdetails.User(
-				user.getUsername(),
-				user.getPassword(),
-				getAuthorities(user)
-		);
+		return org.springframework.security.core.userdetails.User
+				.builder()
+				.username(user.getUsername())
+				.password(user.getPassword())
+				.authorities(getAuthorities(user))
+				.accountExpired(false)
+				.accountLocked(false)
+				.credentialsExpired(false)
+				.disabled(false)
+				.build();
 	}
 
 	private Set<GrantedAuthority> getAuthorities(User user) {

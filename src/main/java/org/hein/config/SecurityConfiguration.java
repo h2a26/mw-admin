@@ -21,14 +21,8 @@ import org.springframework.security.web.access.ExceptionTranslationFilter;
 public class SecurityConfiguration {
 
 	private static final String[] PUBLIC_ENDPOINTS = {
-			"/auth/generate-otp",
-			"/auth/verify-otp",
-			"/auth/resend-otp",
-			"/auth/register",
-			"/auth/login",
-			"/auth/refresh",
-			"/auth/reset-password",
-			"/auth/reset-password-confirm",
+			"/api/v1/auth/login",
+			"/api/v1/auth/refresh",
 			"/v3/api-docs/**",
 			"/swagger-ui/**",
 			"/swagger-ui.html",

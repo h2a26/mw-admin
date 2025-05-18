@@ -8,7 +8,7 @@ import org.hein.api.output.user.UserResponse;
 import java.util.List;
 
 public interface UserService {
-    User findByEmail(String email);
+    User findByUsername(String username);
     UserResponse create(UserRequest request);
     UserResponse update(Long id, UserRequest request);
     void deleteById(Long id);

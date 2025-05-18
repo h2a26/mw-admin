@@ -34,18 +34,7 @@ public class Feature extends AuditableEntity {
 
     private String description;
 
-    @Builder.Default
-    private boolean systemFeature = false;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_feature_id")
-    @JsonBackReference // Fix: prevents infinite recursion when serializing parent/child hierarchy
-    private Feature parentFeature;
-
-    @OneToMany(mappedBy = "parentFeature", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference // Fix: paired with @JsonBackReference on parentFeature
-    @Builder.Default
-    private Set<Feature> childFeatures = new HashSet<>();
+    private boolean enabled = true;
 
     @JsonIgnore
     @OneToMany(mappedBy = "feature", cascade = CascadeType.ALL, orphanRemoval = true)

@@ -9,6 +9,7 @@ import org.hein.entity.UserRole;
 import org.hein.repository.RoleRepository;
 import org.hein.repository.UserRepository;
 import org.hein.service.UserService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
@@ -27,8 +28,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User findByEmail(String email) {
-        return userRepository.findByEmail(email).orElseThrow(() -> new IllegalArgumentException("Invalid email: " + email));
+    public User findByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User '" + username + "' not found"));
     }
 
     @Override
