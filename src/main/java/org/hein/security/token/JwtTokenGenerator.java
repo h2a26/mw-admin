@@ -12,7 +12,6 @@ import javax.crypto.SecretKey;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
@@ -46,29 +45,50 @@ public class JwtTokenGenerator {
 		this.secretKey = SecretKeys.stringToKey(secretKeyValue);
 	}
 
-	public String generate(TokenType type, Authentication auth, String jti) {
-		var roles = auth.getAuthorities().stream()
-				.map(GrantedAuthority::getAuthority)
-				.collect(Collectors.joining(","));
+	public String generateAccessToken(Authentication auth) {
+		return generateAccess(auth);
+	}
 
-		Instant issuedAt = Instant.now();
-		Instant expiration = (type == TokenType.Access)
-				? issuedAt.plus(accessLife, ChronoUnit.MINUTES)
-				: issuedAt.plus(refreshLife, ChronoUnit.MINUTES);
+	public String generateRefreshToken(Authentication auth, String jti) {
+		return generateRefresh(auth, jti);
+	}
+
+	private String generateAccess(Authentication auth) {
+		var roles = extractRoles(auth);
+		var now = Instant.now();
+		var expiration = now.plus(accessLife, ChronoUnit.MINUTES);
 
 		return Jwts.builder()
 				.subject(auth.getName())
 				.issuer(issuer)
-				.issuedAt(Date.from(issuedAt))
+				.issuedAt(Date.from(now))
 				.expiration(Date.from(expiration))
 				.claim(roleKey, roles)
-				.claim(typeKey, type.name())
+				.claim(typeKey, TokenType.Access.name())
+				.signWith(secretKey)
+				.compact();
+	}
+
+	private String generateRefresh(Authentication auth, String jti) {
+		var roles = extractRoles(auth);
+		var now = Instant.now();
+		var expiration = now.plus(refreshLife, ChronoUnit.MINUTES);
+
+		return Jwts.builder()
+				.subject(auth.getName())
+				.issuer(issuer)
+				.issuedAt(Date.from(now))
+				.expiration(Date.from(expiration))
+				.claim(roleKey, roles)
+				.claim(typeKey, TokenType.Refresh.name())
 				.claim(jtiKey, jti)
 				.signWith(secretKey)
 				.compact();
 	}
 
-	public String generate(TokenType type, Authentication auth) {
-		return generate(type, auth, UUID.randomUUID().toString());
+	private String extractRoles(Authentication auth) {
+		return auth.getAuthorities().stream()
+				.map(GrantedAuthority::getAuthority)
+				.collect(Collectors.joining(","));
 	}
 }

@@ -2,8 +2,6 @@ package org.hein.config;
 
 import org.hein.exceptions.handler.SecurityExceptionResolver;
 import org.hein.security.token.JwtTokenFilter;
-import org.hein.security.token.JwtTokenGenerator;
-import org.hein.security.token.JwtTokenParser;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -15,7 +13,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.access.ExceptionTranslationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -24,6 +22,7 @@ public class SecurityConfiguration {
 	private static final String[] PUBLIC_ENDPOINTS = {
 			"/api/v1/auth/login",
 			"/api/v1/auth/refresh",
+			"/api/v1/auth/logout",
 			"/v3/api-docs/**",
 			"/swagger-ui/**",
 			"/swagger-ui.html",
@@ -42,7 +41,7 @@ public class SecurityConfiguration {
 			req.anyRequest().authenticated();
 		});
 
-		http.addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class);
+		http.addFilterAfter(jwtTokenFilter, ExceptionTranslationFilter.class);
 		http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
 		http.exceptionHandling(ex -> {

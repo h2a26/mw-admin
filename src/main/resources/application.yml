@@ -37,7 +37,7 @@ app:
     issuer: org.hein
     expiration:
       access: 2
-      refresh: 1500
+      refresh: 5
     role:
       key: rol
     type:

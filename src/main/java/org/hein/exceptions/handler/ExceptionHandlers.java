@@ -1,8 +1,8 @@
 package org.hein.exceptions.handler;
 
+import lombok.extern.slf4j.Slf4j;
 import org.hein.exceptions.*;
 import org.hein.utils.ApiResponse;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,8 +28,8 @@ public class ExceptionHandlers {
 
 	@ExceptionHandler(ApiRateLimitedException.class)
 	@ResponseStatus(HttpStatus.FORBIDDEN)
-	public ResponseEntity<ApiResponse<String>> handle(ApiRateLimitedException e) {
-		return ApiResponse.of("You are being rate limited. Please try again later.", HttpStatus.FORBIDDEN);
+	public ResponseEntity<ApiResponse<List<String>>> handle(ApiRateLimitedException e) {
+		return ApiResponse.of(List.of("You are being rate limited. Please try again later."), HttpStatus.FORBIDDEN);
 	}
 
 	@ExceptionHandler(ApiBusinessException.class)
@@ -40,15 +40,15 @@ public class ExceptionHandlers {
 
 	@ExceptionHandler(ApiJwtTokenExpirationException.class)
 	@ResponseStatus(HttpStatus.REQUEST_TIMEOUT)
-	public ResponseEntity<ApiResponse<String>> handle(ApiJwtTokenExpirationException e) {
-		return ApiResponse.of("Access token has expired. Please refresh your token.", HttpStatus.REQUEST_TIMEOUT);
+	public ResponseEntity<ApiResponse<List<String>>> handle(ApiJwtTokenExpirationException e) {
+		return ApiResponse.of(List.of("Access token has expired. Please refresh your token."), HttpStatus.REQUEST_TIMEOUT);
 	}
 
 	@ExceptionHandler(ApiJwtTokenInvalidationException.class)
-	@ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+	@ResponseStatus(HttpStatus.UNAUTHORIZED)
 	public ResponseEntity<ApiResponse<List<String>>> handle(ApiJwtTokenInvalidationException e) {
 		log.warn("Invalid token usage: {}", e.getMessage());
-		return ApiResponse.of(List.of("Token is invalid or has been tampered."), HttpStatus.UNPROCESSABLE_ENTITY);
+		return ApiResponse.of(List.of("Token is invalid or has been tampered."), HttpStatus.UNAUTHORIZED);
 	}
 
 	@ExceptionHandler(AuthenticationException.class)
@@ -69,9 +69,9 @@ public class ExceptionHandlers {
 
 	@ExceptionHandler(AccessDeniedException.class)
 	@ResponseStatus(HttpStatus.FORBIDDEN)
-	public ResponseEntity<ApiResponse<String>> handle(AccessDeniedException e) {
+	public ResponseEntity<ApiResponse<List<String>>> handle(AccessDeniedException e) {
 		log.warn("Access denied: {}", e.getMessage());
-		return ApiResponse.of("You do not have permission to perform this action.", HttpStatus.FORBIDDEN);
+		return ApiResponse.of(List.of("You do not have permission to perform this action."), HttpStatus.FORBIDDEN);
 	}
 
 	@ExceptionHandler(InvalidDataAccessApiUsageException.class)
@@ -90,8 +90,8 @@ public class ExceptionHandlers {
 
 	@ExceptionHandler(Exception.class)
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-	public ResponseEntity<ApiResponse<String>> handle(Exception e) {
+	public ResponseEntity<ApiResponse<List<String>>> handle(Exception e) {
 		log.error("Unexpected system error", e);
-		return ApiResponse.of("An unexpected error occurred. Please contact support if this persists.", HttpStatus.INTERNAL_SERVER_ERROR);
+		return ApiResponse.of(List.of("An unexpected error occurred. Please contact support if this persists."), HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 }

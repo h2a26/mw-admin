@@ -69,7 +69,7 @@ public class JwtTokenParser {
 			if (expectedType == TokenType.Access) {
 				throw new ApiJwtTokenExpirationException("Expired access token.");
 			} else {
-				throw new ApiJwtTokenExpirationException("Expired refresh token.");
+				throw new ApiJwtTokenInvalidationException("Expired refresh token.");
 			}
 		} catch (JwtException e) {
 			throw new ApiJwtTokenInvalidationException("Invalid Token", e);

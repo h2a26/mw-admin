@@ -3,6 +3,7 @@ package org.hein.security.token;
 import io.jsonwebtoken.JwtException;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.hein.commons.enum_.TokenType;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -18,6 +19,7 @@ import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class JwtTokenFilter extends OncePerRequestFilter{
 
 	private final JwtTokenParser jwtTokenParser;
@@ -30,6 +32,7 @@ public class JwtTokenFilter extends OncePerRequestFilter{
 
 		try{
 			if(StringUtils.hasLength(jwtToken) && jwtToken.startsWith("Bearer ")) {
+				log.info("jwtToken: {}", jwtToken);
 				var authentication = jwtTokenParser.parse(TokenType.Access, jwtToken);
 
 				SecurityContextHolder.getContext().setAuthentication(authentication);

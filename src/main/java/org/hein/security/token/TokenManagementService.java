@@ -6,6 +6,7 @@ import org.hein.api.input.auth.TokenRequestForm;
 import org.hein.api.input.auth.TokenRevokeForm;
 import org.hein.api.output.auth.TokenResponse;
 import org.hein.commons.enum_.TokenType;
+import org.hein.exceptions.ApiJwtTokenInvalidationException;
 import org.hein.service.UserService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -44,7 +45,7 @@ public class TokenManagementService {
 		var jti = jwtTokenParser.extractJti(form.refreshToken());
 
 		if (!refreshTokenStore.validate(jti, username)) {
-			throw new SecurityException("Invalid or expired refresh token.");
+			throw new ApiJwtTokenInvalidationException("Expired refresh token.");
 		}
 
 		// Invalidate old token by matching jti
@@ -60,8 +61,8 @@ public class TokenManagementService {
 		// Generate a new jti for refresh token
 		var refreshJti = UUID.randomUUID().toString();
 
-		var accessToken = jwtTokenGenerator.generate(TokenType.Access, authentication);
-		var refreshToken = jwtTokenGenerator.generate(TokenType.Refresh, authentication, refreshJti);
+		var accessToken = jwtTokenGenerator.generateAccessToken(authentication);
+		var refreshToken = jwtTokenGenerator.generateRefreshToken(authentication, refreshJti);
 
 		refreshTokenStore.store(refreshJti, username);
 
