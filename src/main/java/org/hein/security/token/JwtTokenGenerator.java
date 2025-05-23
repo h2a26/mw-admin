@@ -32,11 +32,11 @@ public class JwtTokenGenerator {
 	@Value("${app.token.jti.key}")
 	private String jtiKey;
 
-	@Value("${app.token.expiration.refresh}")
-	private int refreshLife;
-
 	@Value("${app.token.expiration.access}")
 	private int accessLife;
+
+	@Value("${app.token.expiration.refresh}")
+	private int refreshLife;
 
 	private SecretKey secretKey;
 
@@ -45,15 +45,15 @@ public class JwtTokenGenerator {
 		this.secretKey = SecretKeys.stringToKey(secretKeyValue);
 	}
 
-	public String generateAccessToken(Authentication auth) {
-		return generateAccess(auth);
+	public String generateAccessToken(Authentication auth, String accessJti) {
+		return generateAccess(auth, accessJti);
 	}
 
-	public String generateRefreshToken(Authentication auth, String jti) {
-		return generateRefresh(auth, jti);
+	public String generateRefreshToken(Authentication auth, String refreshJti) {
+		return generateRefresh(auth, refreshJti);
 	}
 
-	private String generateAccess(Authentication auth) {
+	private String generateAccess(Authentication auth, String accessJti) {
 		var roles = extractRoles(auth);
 		var now = Instant.now();
 		var expiration = now.plus(accessLife, ChronoUnit.MINUTES);
@@ -65,11 +65,12 @@ public class JwtTokenGenerator {
 				.expiration(Date.from(expiration))
 				.claim(roleKey, roles)
 				.claim(typeKey, TokenType.Access.name())
+				.claim(jtiKey, accessJti)
 				.signWith(secretKey)
 				.compact();
 	}
 
-	private String generateRefresh(Authentication auth, String jti) {
+	private String generateRefresh(Authentication auth, String refreshJti) {
 		var roles = extractRoles(auth);
 		var now = Instant.now();
 		var expiration = now.plus(refreshLife, ChronoUnit.MINUTES);
@@ -81,7 +82,7 @@ public class JwtTokenGenerator {
 				.expiration(Date.from(expiration))
 				.claim(roleKey, roles)
 				.claim(typeKey, TokenType.Refresh.name())
-				.claim(jtiKey, jti)
+				.claim(jtiKey, refreshJti)
 				.signWith(secretKey)
 				.compact();
 	}

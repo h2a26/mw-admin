@@ -1,6 +1,7 @@
 package org.hein.security.token;
 
 import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import org.hein.commons.enum_.TokenType;
 import org.hein.exceptions.ApiJwtTokenExpirationException;
 import org.hein.exceptions.ApiJwtTokenInvalidationException;
@@ -18,6 +19,7 @@ import javax.crypto.SecretKey;
 import java.util.Arrays;
 
 @Component
+@RequiredArgsConstructor
 public class JwtTokenParser {
 
 	@Value("${app.token.secret}")
@@ -36,6 +38,8 @@ public class JwtTokenParser {
 	private String jtiKey;
 
 	private SecretKey secretKey;
+
+	private final JtiTokenStore jtiTokenStore;
 
 	@PostConstruct
 	public void initBean() {
@@ -60,6 +64,17 @@ public class JwtTokenParser {
 			}
 
 			var username = claims.getSubject();
+
+			var jtiValue = claims.get(jtiKey, String.class);
+
+			if (expectedType.name().equals(TokenType.Access.name()) && !jtiTokenStore.validateAccessJti(jtiValue, username)) {
+				throw new ApiJwtTokenInvalidationException("Expired access token.");
+			}
+
+			if (expectedType.name().equals(TokenType.Refresh.name()) && !jtiTokenStore.validateRefreshJti(jtiValue, username)) {
+				throw new ApiJwtTokenInvalidationException("Expired refresh token.");
+			}
+
 			var roles = Arrays.stream(claims.get(roleKey, String.class).split(","))
 					.map(SimpleGrantedAuthority::new).toList();
 

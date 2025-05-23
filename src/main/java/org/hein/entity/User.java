@@ -39,9 +39,11 @@ public class User extends AuditableEntity {
     private String email;
 
     @Column(nullable = false)
+    @Builder.Default
     private boolean enabled = true;
 
     @Column(nullable = false)
+    @Builder.Default
     private boolean locked = false;
 
     @JsonIgnore

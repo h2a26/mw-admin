@@ -34,6 +34,7 @@ public class Feature extends AuditableEntity {
 
     private String description;
 
+    @Builder.Default
     private boolean enabled = true;
 
     @JsonIgnore
