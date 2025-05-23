@@ -72,7 +72,7 @@ public class JwtTokenParser {
 				throw new ApiJwtTokenInvalidationException("Expired refresh token.");
 			}
 		} catch (JwtException e) {
-			throw new ApiJwtTokenInvalidationException("Invalid Token", e);
+			throw new ApiJwtTokenInvalidationException("Token is invalid.", e);
 		}
 	}
 

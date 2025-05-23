@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.nio.file.AccessDeniedException;
 import java.util.List;
 
+import static org.hein.utils.ErrorCodes.*;
+
 @Slf4j
 @RestControllerAdvice
 public class ExceptionHandlers {
@@ -23,38 +25,33 @@ public class ExceptionHandlers {
 	@ExceptionHandler(ApiValidationException.class)
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	public ResponseEntity<ApiResponse<List<String>>> handle(ApiValidationException e) {
-		return ApiResponse.of(e.getMessages(), HttpStatus.BAD_REQUEST);
+		return ApiResponse.of(e.getMessages(), HttpStatus.BAD_REQUEST, HttpStatus.BAD_REQUEST.getReasonPhrase());
 	}
 
-	@ExceptionHandler(ApiRateLimitedException.class)
-	@ResponseStatus(HttpStatus.FORBIDDEN)
-	public ResponseEntity<ApiResponse<List<String>>> handle(ApiRateLimitedException e) {
-		return ApiResponse.of(List.of("You are being rate limited. Please try again later."), HttpStatus.FORBIDDEN);
-	}
 
 	@ExceptionHandler(ApiBusinessException.class)
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	public ResponseEntity<ApiResponse<List<String>>> handle(ApiBusinessException e) {
-		return ApiResponse.of(List.of("A business rule was violated. Please review your request."), HttpStatus.BAD_REQUEST);
+		return ApiResponse.of(List.of("A business rule was violated. Please review your request."), HttpStatus.BAD_REQUEST, HttpStatus.BAD_REQUEST.getReasonPhrase());
 	}
 
 	@ExceptionHandler(ApiJwtTokenExpirationException.class)
-	@ResponseStatus(HttpStatus.REQUEST_TIMEOUT)
+	@ResponseStatus(HttpStatus.UNAUTHORIZED)
 	public ResponseEntity<ApiResponse<List<String>>> handle(ApiJwtTokenExpirationException e) {
-		return ApiResponse.of(List.of("Access token has expired. Please refresh your token."), HttpStatus.REQUEST_TIMEOUT);
+		return ApiResponse.of(List.of("Access token has expired. Please refresh your token."), HttpStatus.UNAUTHORIZED, ACCESS_TOKEN_EXPIRED);
 	}
 
 	@ExceptionHandler(ApiJwtTokenInvalidationException.class)
 	@ResponseStatus(HttpStatus.UNAUTHORIZED)
 	public ResponseEntity<ApiResponse<List<String>>> handle(ApiJwtTokenInvalidationException e) {
-		log.warn("Invalid token usage: {}", e.getMessage());
-		return ApiResponse.of(List.of("Token is invalid or has been tampered."), HttpStatus.UNAUTHORIZED);
+		log.error("Invalid token usage: {}", e.getMessage());
+		return ApiResponse.of(List.of("Token is invalid."), HttpStatus.UNAUTHORIZED, INVALID_TOKEN);
 	}
 
 	@ExceptionHandler(AuthenticationException.class)
 	@ResponseStatus(HttpStatus.UNAUTHORIZED)
 	public ResponseEntity<ApiResponse<List<String>>> handle(AuthenticationException e) {
-		log.warn("Authentication failed: {}", e.getClass().getSimpleName());
+		log.error("Authentication failed: {}", e.getClass().getSimpleName());
 
 		List<String> messages = switch (e) {
 			case BadCredentialsException ex -> List.of("Incorrect password. Please try again.");
@@ -64,34 +61,34 @@ public class ExceptionHandlers {
 			default -> List.of("Authentication is required for this action.");
 		};
 
-		return ApiResponse.of(messages, HttpStatus.UNAUTHORIZED);
+		return ApiResponse.of(messages, HttpStatus.UNAUTHORIZED, HttpStatus.UNAUTHORIZED.getReasonPhrase());
 	}
 
 	@ExceptionHandler(AccessDeniedException.class)
 	@ResponseStatus(HttpStatus.FORBIDDEN)
 	public ResponseEntity<ApiResponse<List<String>>> handle(AccessDeniedException e) {
-		log.warn("Access denied: {}", e.getMessage());
-		return ApiResponse.of(List.of("You do not have permission to perform this action."), HttpStatus.FORBIDDEN);
+		log.error("Access denied: {}", e.getMessage());
+		return ApiResponse.of(List.of("You do not have permission to perform this action."), HttpStatus.FORBIDDEN, UNAUTHORIZED_ACCESS);
 	}
 
 	@ExceptionHandler(InvalidDataAccessApiUsageException.class)
 	@ResponseStatus(HttpStatus.NOT_FOUND)
 	public ResponseEntity<ApiResponse<List<String>>> handle(InvalidDataAccessApiUsageException e) {
 		log.error("Invalid data access usage", e);
-		return ApiResponse.of(List.of("The requested resource could not be found or accessed."), HttpStatus.NOT_FOUND);
+		return ApiResponse.of(List.of("The requested resource could not be found or accessed."), HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.getReasonPhrase());
 	}
 
 	@ExceptionHandler(IllegalStateException.class)
 	@ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
 	public ResponseEntity<ApiResponse<List<String>>> handle(IllegalStateException e) {
 		log.error("Illegal state", e);
-		return ApiResponse.of(List.of("The request could not be processed in the current state."), HttpStatus.NOT_ACCEPTABLE);
+		return ApiResponse.of(List.of("The request could not be processed in the current state."), HttpStatus.NOT_ACCEPTABLE, HttpStatus.NOT_ACCEPTABLE.getReasonPhrase());
 	}
 
 	@ExceptionHandler(Exception.class)
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 	public ResponseEntity<ApiResponse<List<String>>> handle(Exception e) {
 		log.error("Unexpected system error", e);
-		return ApiResponse.of(List.of("An unexpected error occurred. Please contact support if this persists."), HttpStatus.INTERNAL_SERVER_ERROR);
+		return ApiResponse.of(List.of("An unexpected error occurred. Please contact support if this persists."), HttpStatus.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase());
 	}
 }
