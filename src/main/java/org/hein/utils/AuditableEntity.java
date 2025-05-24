@@ -28,9 +28,6 @@ public abstract class AuditableEntity {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    @Column(nullable = false)
-    private LocalDateTime deletedAt;
-
     @Version
     private Long version;
 

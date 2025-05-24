@@ -22,11 +22,10 @@ CREATE TABLE IF NOT EXISTS features
     name        VARCHAR(255) NOT NULL UNIQUE,
     description TEXT,
     enabled     BOOLEAN      NOT NULL DEFAULT TRUE,
-    created_at  TIMESTAMP    NOT NULL,
-    updated_at  TIMESTAMP    NOT NULL,
-    deleted_at  TIMESTAMP    NULL,
-    created_by  BIGINT       NULL,
-    modified_by BIGINT       NULL,
+    created_at  TIMESTAMPTZ    NOT NULL,
+    updated_at  TIMESTAMPTZ    NOT NULL,
+    created_by  VARCHAR(255) NULL,
+    modified_by VARCHAR(255) NULL,
     version     BIGINT       NOT NULL DEFAULT 0
 );
 
@@ -38,11 +37,10 @@ CREATE TABLE IF NOT EXISTS permissions
     feature_id  BIGINT      NOT NULL REFERENCES features (id) ON DELETE CASCADE,
     action      action_enum NOT NULL,
     description TEXT,
-    created_at  TIMESTAMP   NOT NULL,
-    updated_at  TIMESTAMP   NOT NULL,
-    deleted_at  TIMESTAMP   NULL,
-    created_by  BIGINT      NULL,
-    modified_by BIGINT      NULL,
+    created_at  TIMESTAMPTZ   NOT NULL,
+    updated_at  TIMESTAMPTZ   NOT NULL,
+    created_by  VARCHAR(255) NULL,
+    modified_by VARCHAR(255) NULL,
     version     BIGINT      NOT NULL DEFAULT 0
 );
 
@@ -54,11 +52,10 @@ CREATE TABLE IF NOT EXISTS roles
     name        VARCHAR(255) NOT NULL UNIQUE,
     description TEXT,
     system_role BOOLEAN      NOT NULL DEFAULT FALSE,
-    created_at  TIMESTAMP    NOT NULL,
-    updated_at  TIMESTAMP    NOT NULL,
-    deleted_at  TIMESTAMP    NULL,
-    created_by  BIGINT       NULL,
-    modified_by BIGINT       NULL,
+    created_at  TIMESTAMPTZ    NOT NULL,
+    updated_at  TIMESTAMPTZ    NOT NULL,
+    created_by  VARCHAR(255) NULL,
+    modified_by VARCHAR(255) NULL,
     version     BIGINT       NOT NULL DEFAULT 0
 );
 
@@ -69,11 +66,10 @@ CREATE TABLE IF NOT EXISTS role_permissions
     id            BIGSERIAL PRIMARY KEY,
     role_id       BIGINT    NOT NULL REFERENCES roles (id) ON DELETE CASCADE,
     permission_id BIGINT    NOT NULL REFERENCES permissions (id) ON DELETE CASCADE,
-    created_at    TIMESTAMP NOT NULL,
-    updated_at    TIMESTAMP NOT NULL,
-    deleted_at    TIMESTAMP NULL,
-    created_by    BIGINT    NULL,
-    modified_by   BIGINT    NULL,
+    created_at    TIMESTAMPTZ NOT NULL,
+    updated_at    TIMESTAMPTZ NOT NULL,
+    created_by  VARCHAR(255) NULL,
+    modified_by VARCHAR(255) NULL,
     version       BIGINT    NOT NULL DEFAULT 0,
     UNIQUE (role_id, permission_id)
 );
@@ -85,11 +81,10 @@ CREATE TABLE IF NOT EXISTS role_features
     id          BIGSERIAL PRIMARY KEY,
     role_id     BIGINT    NOT NULL REFERENCES roles (id) ON DELETE CASCADE,
     feature_id  BIGINT    NOT NULL REFERENCES features (id) ON DELETE CASCADE,
-    created_at  TIMESTAMP NOT NULL,
-    updated_at  TIMESTAMP NOT NULL,
-    deleted_at  TIMESTAMP NULL,
-    created_by  BIGINT    NULL,
-    modified_by BIGINT    NULL,
+    created_at  TIMESTAMPTZ NOT NULL,
+    updated_at  TIMESTAMPTZ NOT NULL,
+    created_by  VARCHAR(255) NULL,
+    modified_by VARCHAR(255) NULL,
     version     BIGINT    NOT NULL DEFAULT 0,
     UNIQUE (role_id, feature_id)
 );
@@ -113,11 +108,10 @@ CREATE TABLE IF NOT EXISTS users
     email       VARCHAR(255) NOT NULL UNIQUE,
     enabled     BOOLEAN      NOT NULL DEFAULT TRUE,
     locked      BOOLEAN      NOT NULL DEFAULT FALSE,
-    created_at  TIMESTAMP    NOT NULL,
-    updated_at  TIMESTAMP    NOT NULL,
-    deleted_at  TIMESTAMP    NULL,
-    created_by  BIGINT       NULL,
-    modified_by BIGINT       NULL,
+    created_at  TIMESTAMPTZ    NOT NULL,
+    updated_at  TIMESTAMPTZ    NOT NULL,
+    created_by  VARCHAR(255) NULL,
+    modified_by VARCHAR(255) NULL,
     version     BIGINT       NOT NULL DEFAULT 0
 );
 
@@ -129,16 +123,15 @@ CREATE TABLE IF NOT EXISTS user_roles
     id                  BIGSERIAL PRIMARY KEY,
     user_id             BIGINT    NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     role_id             BIGINT    NOT NULL REFERENCES roles (id) ON DELETE CASCADE,
-    assigned_at         TIMESTAMP,
+    assigned_at         TIMESTAMPTZ,
     assigned_by_id      BIGINT    NULL REFERENCES users (id),
     assignment_reason   TEXT,
     active              BOOLEAN   NOT NULL DEFAULT TRUE,
     inherit_permissions BOOLEAN   NOT NULL DEFAULT TRUE,
-    created_at          TIMESTAMP NOT NULL,
-    updated_at          TIMESTAMP NOT NULL,
-    deleted_at          TIMESTAMP NULL,
-    created_by          BIGINT    NULL,
-    modified_by         BIGINT    NULL,
+    created_at          TIMESTAMPTZ NOT NULL,
+    updated_at          TIMESTAMPTZ NOT NULL,
+    created_by          VARCHAR(255) NULL,
+    modified_by         VARCHAR(255) NULL,
     version             BIGINT    NOT NULL DEFAULT 0,
     UNIQUE (user_id, role_id)
 );
