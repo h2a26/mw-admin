@@ -1,4 +1,4 @@
-package org.hein.api.output.role;
+package org.hein.api.response.role;
 
 import org.hein.entity.Role;
 import org.hein.utils.AuditableEntity;

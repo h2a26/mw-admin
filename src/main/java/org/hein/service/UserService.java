@@ -1,9 +1,9 @@
 package org.hein.service;
 
+import org.hein.api.request.user.UserRequest;
+import org.hein.api.response.user.UserResponse;
 import org.hein.entity.User;
 
-import org.hein.api.input.user.UserRequest;
-import org.hein.api.output.user.UserResponse;
 
 import java.util.List;
 

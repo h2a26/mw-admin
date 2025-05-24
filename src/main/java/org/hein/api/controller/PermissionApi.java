@@ -1,7 +1,7 @@
 package org.hein.api.controller;
 
-import org.hein.api.input.permission.PermissionRequest;
-import org.hein.api.output.permission.PermissionResponse;
+import org.hein.api.request.permission.PermissionRequest;
+import org.hein.api.response.permission.PermissionResponse;
 import org.hein.service.PermissionService;
 import org.hein.utils.ApiResponse;
 import org.springframework.http.ResponseEntity;

@@ -1,4 +1,4 @@
-package org.hein.api.output.auth;
+package org.hein.api.response.auth;
 
 import org.hein.entity.User;
 

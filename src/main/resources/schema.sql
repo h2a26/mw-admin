@@ -1,9 +1,3 @@
--- Drop the type unconditionally if it exists
-DROP TYPE IF EXISTS action_enum CASCADE;
-
--- Then create it
-CREATE TYPE action_enum AS ENUM ('CREATE', 'READ', 'UPDATE', 'DELETE', 'EXECUTE');
-
 -- Drop tables if exist (in order of dependencies)
 DROP TABLE IF EXISTS role_feature_actions CASCADE;
 DROP TABLE IF EXISTS user_roles CASCADE;
@@ -35,7 +29,7 @@ CREATE TABLE IF NOT EXISTS permissions
 (
     id          BIGSERIAL PRIMARY KEY,
     feature_id  BIGINT      NOT NULL REFERENCES features (id) ON DELETE CASCADE,
-    action      action_enum NOT NULL,
+    action      VARCHAR(50) NOT NULL,
     description TEXT,
     created_at  TIMESTAMPTZ   NOT NULL,
     updated_at  TIMESTAMPTZ   NOT NULL,
@@ -94,7 +88,7 @@ CREATE INDEX IF NOT EXISTS idx_role_feature ON role_features (role_id, feature_i
 CREATE TABLE IF NOT EXISTS role_feature_actions
 (
     role_feature_id BIGINT      NOT NULL REFERENCES role_features (id) ON DELETE CASCADE,
-    action          action_enum NOT NULL,
+    action          VARCHAR(50) NOT NULL,
     PRIMARY KEY (role_feature_id, action)
 );
 

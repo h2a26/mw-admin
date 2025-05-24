@@ -1,7 +1,7 @@
 package org.hein.service;
 
-import org.hein.api.input.feature.FeatureRequest;
-import org.hein.api.output.feature.FeatureResponse;
+import org.hein.api.request.feature.FeatureRequest;
+import org.hein.api.response.feature.FeatureResponse;
 
 import java.util.List;
 

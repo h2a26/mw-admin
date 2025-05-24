@@ -1,8 +1,8 @@
 package org.hein.service.impl;
 
 import jakarta.transaction.Transactional;
-import org.hein.api.input.permission.PermissionRequest;
-import org.hein.api.output.permission.PermissionResponse;
+import org.hein.api.request.permission.PermissionRequest;
+import org.hein.api.response.permission.PermissionResponse;
 import org.hein.entity.Action;
 import org.hein.entity.Feature;
 import org.hein.entity.Permission;

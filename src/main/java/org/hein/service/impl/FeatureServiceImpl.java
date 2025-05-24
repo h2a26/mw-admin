@@ -1,7 +1,7 @@
 package org.hein.service.impl;
 
-import org.hein.api.input.feature.FeatureRequest;
-import org.hein.api.output.feature.FeatureResponse;
+import org.hein.api.request.feature.FeatureRequest;
+import org.hein.api.response.feature.FeatureResponse;
 import org.hein.entity.Feature;
 import org.hein.repository.FeatureRepository;
 import org.hein.service.FeatureService;

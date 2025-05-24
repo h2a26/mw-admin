@@ -25,14 +25,14 @@ public class ExceptionHandlers {
 	@ExceptionHandler(ApiValidationException.class)
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	public ResponseEntity<ApiResponse<List<String>>> handle(ApiValidationException e) {
-		return ApiResponse.of(e.getMessages(), HttpStatus.BAD_REQUEST, HttpStatus.BAD_REQUEST.getReasonPhrase());
+		return ApiResponse.of(e.getMessages(), HttpStatus.BAD_REQUEST, HttpStatus.BAD_REQUEST.getReasonPhrase().toUpperCase());
 	}
 
 
 	@ExceptionHandler(ApiBusinessException.class)
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	public ResponseEntity<ApiResponse<List<String>>> handle(ApiBusinessException e) {
-		return ApiResponse.of(List.of("A business rule was violated. Please review your request."), HttpStatus.BAD_REQUEST, HttpStatus.BAD_REQUEST.getReasonPhrase());
+		return ApiResponse.of(List.of("A business rule was violated. Please review your request."), HttpStatus.BAD_REQUEST, HttpStatus.BAD_REQUEST.getReasonPhrase().toUpperCase());
 	}
 
 	@ExceptionHandler(ApiJwtTokenExpirationException.class)
@@ -61,7 +61,7 @@ public class ExceptionHandlers {
 			default -> List.of("Authentication is required for this action.");
 		};
 
-		return ApiResponse.of(messages, HttpStatus.UNAUTHORIZED, HttpStatus.UNAUTHORIZED.getReasonPhrase());
+		return ApiResponse.of(messages, HttpStatus.UNAUTHORIZED, HttpStatus.UNAUTHORIZED.getReasonPhrase().toUpperCase());
 	}
 
 	@ExceptionHandler(AccessDeniedException.class)
@@ -75,20 +75,27 @@ public class ExceptionHandlers {
 	@ResponseStatus(HttpStatus.NOT_FOUND)
 	public ResponseEntity<ApiResponse<List<String>>> handle(InvalidDataAccessApiUsageException e) {
 		log.error("Invalid data access usage", e);
-		return ApiResponse.of(List.of("The requested resource could not be found or accessed."), HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.getReasonPhrase());
+		return ApiResponse.of(List.of("The requested resource could not be found or accessed."), HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.getReasonPhrase().toUpperCase());
 	}
 
 	@ExceptionHandler(IllegalStateException.class)
 	@ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
 	public ResponseEntity<ApiResponse<List<String>>> handle(IllegalStateException e) {
 		log.error("Illegal state", e);
-		return ApiResponse.of(List.of("The request could not be processed in the current state."), HttpStatus.NOT_ACCEPTABLE, HttpStatus.NOT_ACCEPTABLE.getReasonPhrase());
+		return ApiResponse.of(List.of("The request could not be processed in the current state."), HttpStatus.NOT_ACCEPTABLE, HttpStatus.NOT_ACCEPTABLE.getReasonPhrase().toUpperCase());
+	}
+
+	@ExceptionHandler(IllegalArgumentException.class)
+	@ResponseStatus(HttpStatus.NOT_FOUND)
+	public ResponseEntity<ApiResponse<List<String>>> handle(IllegalArgumentException e) {
+		log.error("Illegal state", e);
+		return ApiResponse.of(List.of(e.getMessage()), HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.getReasonPhrase().toUpperCase());
 	}
 
 	@ExceptionHandler(Exception.class)
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 	public ResponseEntity<ApiResponse<List<String>>> handle(Exception e) {
 		log.error("Unexpected system error", e);
-		return ApiResponse.of(List.of("An unexpected error occurred. Please contact support if this persists."), HttpStatus.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase());
+		return ApiResponse.of(List.of("An unexpected error occurred. Please contact support if this persists."), HttpStatus.INTERNAL_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase().toUpperCase());
 	}
 }

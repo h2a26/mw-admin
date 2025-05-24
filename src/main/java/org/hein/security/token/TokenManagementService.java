@@ -1,12 +1,11 @@
 package org.hein.security.token;
 
 import lombok.RequiredArgsConstructor;
-import org.hein.api.input.auth.TokenRefreshForm;
-import org.hein.api.input.auth.TokenRequestForm;
-import org.hein.api.input.auth.TokenRevokeForm;
-import org.hein.api.output.auth.TokenResponse;
+import org.hein.api.request.auth.TokenRefreshForm;
+import org.hein.api.request.auth.TokenRequestForm;
+import org.hein.api.request.auth.TokenRevokeForm;
+import org.hein.api.response.auth.TokenResponse;
 import org.hein.commons.enum_.TokenType;
-import org.hein.exceptions.ApiJwtTokenInvalidationException;
 import org.hein.service.UserService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

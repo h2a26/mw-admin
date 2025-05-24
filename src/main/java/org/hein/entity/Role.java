@@ -1,31 +1,26 @@
 package org.hein.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hein.utils.AuditableEntity;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
-@Table(name = "roles", indexes = {
-        @Index(name = "idx_role_name", columnList = "name", unique = true)
-})
+@Table(name = "roles")
 @Cache(region = "role", usage = CacheConcurrencyStrategy.READ_WRITE)
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@NamedEntityGraphs({
-        @NamedEntityGraph(
-                name = "Role.withPermissions",
-                attributeNodes = @NamedAttributeNode("rolePermissions")
-        )
-})
+@NamedEntityGraph(
+        name = "Role.withPermissions",
+        attributeNodes = @NamedAttributeNode("permissions")
+)
 public class Role extends AuditableEntity {
 
     @Column(nullable = false, unique = true)
@@ -36,106 +31,45 @@ public class Role extends AuditableEntity {
     @Builder.Default
     private boolean systemRole = false;
 
-    @JsonIgnore
-    @OneToMany(mappedBy = "role", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "role_permissions",
+            joinColumns = @JoinColumn(name = "role_id"),
+            inverseJoinColumns = @JoinColumn(name = "permission_id")
+    )
     @Builder.Default
-    private Set<RolePermission> rolePermissions = new HashSet<>();
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+    private Set<Permission> permissions = new HashSet<>();
 
-    @JsonIgnore
     @OneToMany(mappedBy = "role", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<UserRole> userRoles = new HashSet<>();
 
-    @JsonIgnore
-    @OneToMany(mappedBy = "role", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private Set<RoleFeature> roleFeatures = new HashSet<>();
-
-    @Transient
-    @JsonIgnore
-    private Set<Permission> permissions;
-
-    /**
-     * Fetch permissions cached, call within transaction to avoid lazy issues
-     */
-    @JsonIgnore
-    public Set<Permission> getPermissions() {
-        if (this.permissions == null) {
-            this.permissions = rolePermissions.stream()
-                    .map(RolePermission::getPermission)
-                    .collect(Collectors.toSet());
-        }
-        return this.permissions;
-    }
-
-    // Add permission helper
+    // Helper methods
     public void addPermission(Permission permission) {
-        if (rolePermissions.stream().noneMatch(rp -> rp.getPermission().equals(permission))) {
-            rolePermissions.add(RolePermission.builder().role(this).permission(permission).build());
-            this.permissions = null; // invalidate cache
-        }
+        permissions.add(permission);
+        permission.getRoles().add(this);
     }
 
-    // Remove permission helper
     public void removePermission(Permission permission) {
-        rolePermissions.removeIf(rp -> rp.getPermission().equals(permission));
-        this.permissions = null; // invalidate cache
+        permissions.remove(permission);
+        permission.getRoles().remove(this);
     }
 
-    // Add feature with actions
-    public void addFeature(Feature feature, Action... actions) {
-        RoleFeature roleFeature = roleFeatures.stream()
-                .filter(rf -> rf.getFeature().equals(feature))
-                .findFirst()
-                .orElse(null);
-
-        if (roleFeature == null) {
-            roleFeature = RoleFeature.create(this, feature, actions);
-            roleFeatures.add(roleFeature);
-        } else {
-            for (Action action : actions) {
-                roleFeature.addAction(action);
-            }
-        }
-    }
-
-    // Remove feature
-    public void removeFeature(Feature feature) {
-        roleFeatures.removeIf(rf -> rf.getFeature().equals(feature));
-    }
-
-    // Check permission
-    public boolean hasPermission(Feature feature, Action action) {
-        return roleFeatures.stream()
-                .filter(rf -> rf.getFeature().equals(feature))
-                .anyMatch(rf -> rf.hasAction(action));
-    }
-
-    // Get accessible features
-    public Set<Feature> getAccessibleFeatures() {
-        return roleFeatures.stream()
-                .map(RoleFeature::getFeature)
-                .collect(Collectors.toSet());
-    }
-
-    // Get allowed actions for feature
-    public Set<Action> getActionsForFeature(Feature feature) {
-        return roleFeatures.stream()
-                .filter(rf -> rf.getFeature().equals(feature))
-                .findFirst()
-                .map(RoleFeature::getAllowedActions)
-                .orElse(Collections.emptySet());
+    public boolean hasPermission(Permission permission) {
+        return permissions.contains(permission);
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Role that)) return false;
-        return Objects.equals(name, that.name);
+        if (!(o instanceof Role role)) return false;
+        return name.equals(role.name);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name);
+        return name.hashCode();
     }
 }

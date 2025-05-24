@@ -1,7 +1,7 @@
 package org.hein.api.controller;
 
-import org.hein.api.input.user.UserRequest;
-import org.hein.api.output.user.UserResponse;
+import org.hein.api.request.user.UserRequest;
+import org.hein.api.response.user.UserResponse;
 import org.hein.service.UserService;
 import org.hein.utils.ApiResponse;
 import org.springframework.http.ResponseEntity;

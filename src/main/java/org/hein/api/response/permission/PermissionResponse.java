@@ -1,4 +1,4 @@
-package org.hein.api.output.permission;
+package org.hein.api.response.permission;
 
 import org.hein.entity.Permission;
 

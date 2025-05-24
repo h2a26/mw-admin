@@ -1,7 +1,7 @@
 package org.hein.api.controller;
 
-import org.hein.api.input.role.RoleRequest;
-import org.hein.api.output.role.RoleResponse;
+import org.hein.api.request.role.RoleRequest;
+import org.hein.api.response.role.RoleResponse;
 import org.hein.service.RoleService;
 import org.hein.utils.ApiResponse;
 import org.springframework.http.ResponseEntity;

@@ -1,4 +1,4 @@
-package org.hein.api.input.auth;
+package org.hein.api.request.auth;
 
 import jakarta.validation.constraints.NotBlank;
 

@@ -1,7 +1,7 @@
 package org.hein.service;
 
-import org.hein.api.input.permission.PermissionRequest;
-import org.hein.api.output.permission.PermissionResponse;
+import org.hein.api.request.permission.PermissionRequest;
+import org.hein.api.response.permission.PermissionResponse;
 
 import java.util.List;
 

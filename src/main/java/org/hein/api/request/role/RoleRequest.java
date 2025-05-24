@@ -1,4 +1,4 @@
-package org.hein.api.input.role;
+package org.hein.api.request.role;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;

@@ -1,4 +1,4 @@
-package org.hein.api.output.feature;
+package org.hein.api.response.feature;
 
 import org.hein.entity.Feature;
 

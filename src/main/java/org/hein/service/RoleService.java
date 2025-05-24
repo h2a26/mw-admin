@@ -1,7 +1,8 @@
 package org.hein.service;
 
-import org.hein.api.input.role.RoleRequest;
-import org.hein.api.output.role.RoleResponse;
+
+import org.hein.api.request.role.RoleRequest;
+import org.hein.api.response.role.RoleResponse;
 
 import java.util.List;
 

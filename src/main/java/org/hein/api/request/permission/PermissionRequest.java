@@ -1,4 +1,4 @@
-package org.hein.api.input.permission;
+package org.hein.api.request.permission;
 
 import jakarta.validation.constraints.NotNull;
 

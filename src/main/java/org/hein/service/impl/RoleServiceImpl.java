@@ -1,8 +1,8 @@
 package org.hein.service.impl;
 
 import jakarta.transaction.Transactional;
-import org.hein.api.input.role.RoleRequest;
-import org.hein.api.output.role.RoleResponse;
+import org.hein.api.request.role.RoleRequest;
+import org.hein.api.response.role.RoleResponse;
 import org.hein.entity.Permission;
 import org.hein.entity.Role;
 import org.hein.repository.PermissionRepository;

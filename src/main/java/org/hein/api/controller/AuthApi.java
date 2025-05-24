@@ -1,9 +1,9 @@
 package org.hein.api.controller;
 
-import org.hein.api.input.auth.TokenRefreshForm;
-import org.hein.api.input.auth.TokenRequestForm;
-import org.hein.api.input.auth.TokenRevokeForm;
-import org.hein.api.output.auth.TokenResponse;
+import org.hein.api.request.auth.TokenRefreshForm;
+import org.hein.api.request.auth.TokenRequestForm;
+import org.hein.api.request.auth.TokenRevokeForm;
+import org.hein.api.response.auth.TokenResponse;
 import org.hein.security.token.TokenManagementService;
 import org.hein.utils.ApiResponse;
 import org.springframework.http.ResponseEntity;

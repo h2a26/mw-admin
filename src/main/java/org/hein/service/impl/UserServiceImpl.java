@@ -1,11 +1,10 @@
 package org.hein.service.impl;
 
 import jakarta.transaction.Transactional;
-import org.hein.api.input.user.UserRequest;
-import org.hein.api.output.user.UserResponse;
+import org.hein.api.request.user.UserRequest;
+import org.hein.api.response.user.UserResponse;
 import org.hein.entity.Role;
 import org.hein.entity.User;
-import org.hein.entity.UserRole;
 import org.hein.repository.RoleRepository;
 import org.hein.repository.UserRepository;
 import org.hein.service.UserService;
@@ -67,7 +66,6 @@ public class UserServiceImpl implements UserService {
         user.setEmail(request.email());
 
         // Clear and reassign roles
-        user.clearRoles();
         roles.forEach(user::addRole); // reassign via helper
 
         return UserResponse.from(userRepository.save(user));
