@@ -1,7 +1,8 @@
 package org.hein.service.impl;
 
-import jakarta.transaction.Transactional;
-import org.hein.api.request.permission.PermissionRequest;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.hein.api.request.permission.PermissionCreateRequest;
 import org.hein.api.response.permission.PermissionResponse;
 import org.hein.entity.Action;
 import org.hein.entity.Feature;
@@ -9,69 +10,117 @@ import org.hein.entity.Permission;
 import org.hein.repository.FeatureRepository;
 import org.hein.repository.PermissionRepository;
 import org.hein.service.PermissionService;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
+import jakarta.persistence.EntityNotFoundException;
+
+@Slf4j
 @Service
-@Transactional
+@RequiredArgsConstructor
 public class PermissionServiceImpl implements PermissionService {
 
     private final PermissionRepository permissionRepository;
     private final FeatureRepository featureRepository;
-
-    public PermissionServiceImpl(PermissionRepository permissionRepository, FeatureRepository featureRepository) {
-        this.permissionRepository = permissionRepository;
-        this.featureRepository = featureRepository;
-    }
-
+    
     @Override
-    public PermissionResponse create(PermissionRequest request) {
+    @Transactional
+    @CacheEvict(value = "permissions", allEntries = true)
+    public PermissionResponse create(PermissionCreateRequest request) {
+        // Validate feature exists
         Feature feature = featureRepository.findById(request.featureId())
-                .orElseThrow(() -> new IllegalArgumentException("Feature not found with id: " + request.featureId()));
-
-        Permission permission = Permission.builder()
-                .feature(feature)
-                .action(Action.valueOf(request.action()))
-                .build();
-
-        return PermissionResponse.from(permissionRepository.save(permission));
-    }
-
-    @Override
-    public PermissionResponse update(Long id, PermissionRequest request) {
-        Permission existing = permissionRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Permission not found with id: " + id));
-
-        Feature feature = featureRepository.findById(request.featureId())
-                .orElseThrow(() -> new IllegalArgumentException("Feature not found with id: " + request.featureId()));
-
-        existing.setFeature(feature);
-        existing.setAction(Action.valueOf(request.action()));
-
-        return PermissionResponse.from(permissionRepository.save(existing));
-    }
-
-
-    @Override
-    public List<PermissionResponse> findAll() {
-        return permissionRepository.findAll().stream()
-                .map(PermissionResponse::from)
-                .toList();
-    }
-
-    @Override
-    public PermissionResponse findById(Long id) {
-        return permissionRepository.findById(id)
-                .map(PermissionResponse::from)
-                .orElseThrow(() -> new IllegalArgumentException("Permission not found with id: " + id));
-    }
-
-    @Override
-    public void deleteById(Long id) {
-        if (!permissionRepository.existsById(id)) {
-            throw new IllegalArgumentException("Permission not found with id: " + id);
+                .orElseThrow(() -> new EntityNotFoundException("Feature not found: " + request.featureId()));
+        
+        // Check if permission with same feature and action already exists
+        if (permissionRepository.existsByFeatureIdAndAction(request.featureId(), request.action())) {
+            throw new IllegalStateException("Permission already exists for feature " + feature.getName() + " and action " + request.action());
         }
-        permissionRepository.deleteById(id);
+        
+        Permission permission = new Permission();
+        permission.setFeature(feature);
+        permission.setAction(Action.valueOf(request.action().toUpperCase()));
+        permission.setDescription(request.description());
+        permission.setRequiresApproval(request.requiresApproval());
+        permission.setConstraintPolicy(request.constraintPolicy());
+        
+        Permission savedPermission = permissionRepository.save(permission);
+        return PermissionResponse.fromEntity(savedPermission);
+    }
+
+    @Override
+    @Transactional
+    @CacheEvict(value = "permissions", allEntries = true)
+    public PermissionResponse update(Long id, PermissionCreateRequest request) {
+        Permission permission = permissionRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Permission not found: " + id));
+        
+        // Feature and action are immutable, only update description and approval settings
+        permission.setDescription(request.description());
+        permission.setRequiresApproval(request.requiresApproval());
+        permission.setConstraintPolicy(request.constraintPolicy());
+        
+        Permission updatedPermission = permissionRepository.save(permission);
+        return PermissionResponse.fromEntity(updatedPermission);
+    }
+
+    @Override
+    @Transactional
+    @CacheEvict(value = "permissions", allEntries = true)
+    public void deleteById(Long id) {
+        Permission permission = permissionRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Permission not found: " + id));
+        
+        // Check if permission is used by any roles before deleting
+        if (!permission.getRoles().isEmpty()) {
+            throw new IllegalStateException("Cannot delete permission that is assigned to roles. Remove from roles first.");
+        }
+        
+        permissionRepository.delete(permission);
+    }
+
+    @Override
+    @Cacheable(value = "permissions", key = "#id")
+    public PermissionResponse findById(Long id) {
+        Permission permission = permissionRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Permission not found: " + id));
+        
+        return PermissionResponse.fromEntity(permission);
+    }
+
+    @Override
+    @Cacheable(value = "permissions", key = "'all'")
+    public List<PermissionResponse> findAll() {
+        List<Permission> permissions = permissionRepository.findAll();
+        return permissions.stream()
+                .map(PermissionResponse::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Cacheable(value = "permissions", key = "'feature-' + #featureId")
+    public List<PermissionResponse> findByFeatureId(Long featureId) {
+        // Verify feature exists
+        if (!featureRepository.existsById(featureId)) {
+            throw new EntityNotFoundException("Feature not found: " + featureId);
+        }
+        
+        List<Permission> permissions = permissionRepository.findByFeatureId(featureId);
+        return permissions.stream()
+                .map(PermissionResponse::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Cacheable(value = "permissions", key = "'requires-approval'")
+    public List<PermissionResponse> findRequiresApproval() {
+        List<Permission> permissions = permissionRepository.findByRequiresApprovalTrue();
+        return permissions.stream()
+                .map(PermissionResponse::fromEntity)
+                .collect(Collectors.toList());
     }
 }

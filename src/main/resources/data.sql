@@ -1,64 +1,129 @@
--- FEATURES
-INSERT INTO features (id, name, description, enabled, created_at, updated_at, version)
-VALUES (1, 'USER_MANAGEMENT', 'Manage users and roles', true, '2025-01-01 10:00:00', '2025-01-01 10:00:00', 0),
-       (2, 'REPORTING', 'Access reports and statistics', true, '2025-01-01 10:00:00', '2025-01-01 10:00:00', 0);
+-- Initial data for the RBAC (Role-Based Access Control) system
 
--- PERMISSIONS
-INSERT INTO permissions (id, feature_id, action, description, created_at, updated_at, version)
-VALUES (1, 1, 'CREATE', 'Create users', '2025-01-01 10:00:00', '2025-01-01 10:00:00', 0),
-       (2, 1, 'READ', 'Read user data', '2025-01-01 10:00:00', '2025-01-01 10:00:00', 0),
-       (3, 1, 'UPDATE', 'Update users', '2025-01-01 10:00:00', '2025-01-01 10:00:00', 0),
-       (4, 1, 'DELETE', 'Delete users', '2025-01-01 10:00:00', '2025-01-01 10:00:00', 0),
-       (5, 2, 'READ', 'View reports', '2025-01-01 10:00:00', '2025-01-01 10:00:00', 0);
+-- Admin user (password: admin123)
+INSERT INTO users (id, username, first_name, last_name, password, email, system_account, created_at, created_by)
+VALUES (1, 'admin', 'System', 'Administrator',
+        '$2a$12$7OfRpzK1QqOctMmO5M9s1efwvMdcqemWZGr4dOO8XMjQo5sJ.AyEq',
+        'admin@example.com', true, CURRENT_TIMESTAMP, 'system') ON CONFLICT (id) DO NOTHING;
 
--- ROLES
-INSERT INTO roles (id, name, description, system_role, created_at, updated_at, version)
-VALUES (1, 'ADMIN', 'Administrator role', true, '2025-01-01 10:00:00', '2025-01-01 10:00:00', 0),
-       (2, 'USER', 'Standard user role', false, '2025-01-01 10:00:00', '2025-01-01 10:00:00', 0);
+-- Basic user (password: user123)
+INSERT INTO users (id, username, first_name, last_name, password, email, created_at, created_by)
+VALUES (2, 'user', 'Basic', 'User',
+        '$2a$12$RsU9uzHCgFMgq5.UMpwsreXwC5Z0YxuMM.to20VBzPK.PxJYQAJEK',
+        'user@example.com', CURRENT_TIMESTAMP, 'system') ON CONFLICT (id) DO NOTHING;
 
--- ROLE_PERMISSIONS
-INSERT INTO role_permissions (id, role_id, permission_id, created_at, updated_at, version)
-VALUES (1, 1, 1, '2025-01-01 10:00:00', '2025-01-01 10:00:00', 0),
-       (2, 1, 2, '2025-01-01 10:00:00', '2025-01-01 10:00:00', 0),
-       (3, 1, 3, '2025-01-01 10:00:00', '2025-01-01 10:00:00', 0),
-       (4, 1, 4, '2025-01-01 10:00:00', '2025-01-01 10:00:00', 0),
-       (5, 1, 5, '2025-01-01 10:00:00', '2025-01-01 10:00:00', 0),
-       (6, 2, 2, '2025-01-01 10:00:00', '2025-01-01 10:00:00', 0),
-       (7, 2, 5, '2025-01-01 10:00:00', '2025-01-01 10:00:00', 0);
+-- Core features
+INSERT INTO features (id, name, code, description, enabled, display_order, created_at, created_by)
+VALUES (1, 'User Management', 'users', 'Manage system users', true, 10, CURRENT_TIMESTAMP, 'system'),
+       (2, 'Role Management', 'roles', 'Manage roles and permissions', true, 20, CURRENT_TIMESTAMP, 'system'),
+       (3, 'Feature Management', 'features', 'Manage system features', true, 30, CURRENT_TIMESTAMP, 'system'),
+       (4, 'Permission Management', 'permissions', 'Manage permissions', true, 40, CURRENT_TIMESTAMP, 'system'),
+       (5, 'System Settings', 'settings', 'Manage system settings', true, 50, CURRENT_TIMESTAMP,
+        'system') ON CONFLICT (id) DO NOTHING;
 
--- ROLE_FEATURES
-INSERT INTO role_features (id, role_id, feature_id, created_at, updated_at, version)
-VALUES (1, 1, 1, '2025-01-01 10:00:00', '2025-01-01 10:00:00', 0),
-       (2, 1, 2, '2025-01-01 10:00:00', '2025-01-01 10:00:00', 0),
-       (3, 2, 2, '2025-01-01 10:00:00', '2025-01-01 10:00:00', 0);
+-- User Management sub-features
+INSERT INTO features (id, name, code, description, enabled, display_order, parent_id, created_at, created_by)
+VALUES (101, 'User Profiles', 'user_profiles', 'Manage user profiles', true, 11, 1, CURRENT_TIMESTAMP, 'system'),
+       (102, 'User Roles', 'user_roles', 'Manage user role assignments', true, 12, 1, CURRENT_TIMESTAMP,
+        'system') ON CONFLICT (id) DO NOTHING;
 
--- ROLE_FEATURE_ACTIONS
-INSERT INTO role_feature_actions (role_feature_id, action)
-VALUES (1, 'CREATE'),
-       (1, 'READ'),
-       (1, 'UPDATE'),
-       (1, 'DELETE'),
-       (2, 'READ'),
-       (3, 'READ');
+-- Permissions
+INSERT INTO permissions (id, feature_id, action, description, created_at, created_by)
+VALUES (1, 1, 'VIEW', 'View users list', CURRENT_TIMESTAMP, 'system'),
+       (2, 1, 'CREATE', 'Create new users', CURRENT_TIMESTAMP, 'system'),
+       (3, 1, 'UPDATE', 'Update existing users', CURRENT_TIMESTAMP, 'system'),
+       (4, 1, 'DELETE', 'Delete users', CURRENT_TIMESTAMP, 'system'),
+       (5, 1, 'ASSIGN_ROLE', 'Assign roles to users', CURRENT_TIMESTAMP, 'system'),
+       (6, 1, 'REMOVE_ROLE', 'Remove roles from users', CURRENT_TIMESTAMP, 'system'),
+       (7, 1, 'RESET_PASSWORD', 'Reset user passwords', CURRENT_TIMESTAMP, 'system'),
+       (8, 2, 'VIEW', 'View roles list', CURRENT_TIMESTAMP, 'system'),
+       (9, 2, 'CREATE', 'Create new roles', CURRENT_TIMESTAMP, 'system'),
+       (10, 2, 'UPDATE', 'Update existing roles', CURRENT_TIMESTAMP, 'system'),
+       (11, 2, 'DELETE', 'Delete roles', CURRENT_TIMESTAMP, 'system'),
+       (12, 2, 'ASSIGN_PERMISSION', 'Assign permissions to roles', CURRENT_TIMESTAMP, 'system'),
+       (13, 3, 'VIEW', 'View features list', CURRENT_TIMESTAMP, 'system'),
+       (14, 3, 'CREATE', 'Create new features', CURRENT_TIMESTAMP, 'system'),
+       (15, 3, 'UPDATE', 'Update existing features', CURRENT_TIMESTAMP, 'system'),
+       (16, 3, 'DELETE', 'Delete features', CURRENT_TIMESTAMP, 'system'),
+       (17, 4, 'VIEW', 'View permissions list', CURRENT_TIMESTAMP, 'system'),
+       (18, 4, 'CREATE', 'Create new permissions', CURRENT_TIMESTAMP, 'system'),
+       (19, 4, 'UPDATE', 'Update existing permissions', CURRENT_TIMESTAMP, 'system'),
+       (20, 4, 'DELETE', 'Delete permissions', CURRENT_TIMESTAMP, 'system'),
+       (21, 5, 'VIEW', 'View system settings', CURRENT_TIMESTAMP, 'system'),
+       (22, 5, 'UPDATE', 'Update system settings', CURRENT_TIMESTAMP, 'system') ON CONFLICT (id) DO NOTHING;
 
--- USERS
-INSERT INTO users (id, username, first_name, last_name, password, email, enabled, locked, created_at, updated_at,
-                   version)
-VALUES (1, 'admin', 'Admin', 'User', '$2a$12$3.u/zYdeW169uAxqBnPnHuOdPHgjGL.I6O.E1IrZzNd3plVqOkJMi', 'admin@example.com', true, false, '2025-01-01 10:00:00',
-        '2025-01-01 10:00:00', 0),
-       (2, 'johndoe', 'John', 'Doe', '$2a$12$wh97ywnJFR761hMaXnk7ZuqJVDqxTQUMsvC5qPHmorcvkubE.0U2i', 'john@example.com', true, false, '2025-01-01 10:00:00',
-        '2025-01-01 10:00:00', 0);
+-- Roles
+INSERT INTO roles (id, name, code, description, priority, system_role, created_at, created_by)
+VALUES (1, 'System Administrator', 'admin', 'Full access to all system features', 100, true, CURRENT_TIMESTAMP,
+        'system'),
+       (2, 'User Administrator', 'user_admin', 'Manage users and their roles', 90, true, CURRENT_TIMESTAMP, 'system'),
+       (3, 'Role Administrator', 'role_admin', 'Manage roles and permissions', 80, true, CURRENT_TIMESTAMP, 'system'),
+       (4, 'Basic User', 'user', 'Standard user with basic permissions', 10, true, CURRENT_TIMESTAMP,
+        'system') ON CONFLICT (id) DO NOTHING;
 
--- USER_ROLES
-INSERT INTO user_roles (id, user_id, role_id, assigned_at, active, inherit_permissions, created_at, updated_at, version)
-VALUES (1, 1, 1, '2025-01-01 10:00:00', true, true, '2025-01-01 10:00:00', '2025-01-01 10:00:00', 0),
-       (2, 2, 2, '2025-01-01 10:00:00', true, true, '2025-01-01 10:00:00', '2025-01-01 10:00:00', 0);
+-- Role hierarchy
+UPDATE roles
+SET parent_id = 1
+WHERE id IN (2, 3);
 
--- Set sequence to max ID + 1
-SELECT setval(pg_get_serial_sequence('features', 'id'), (SELECT MAX(id) FROM features));
-SELECT setval(pg_get_serial_sequence('permissions', 'id'), (SELECT MAX(id) FROM permissions));
-SELECT setval(pg_get_serial_sequence('roles', 'id'), (SELECT MAX(id) FROM roles));
-SELECT setval(pg_get_serial_sequence('role_permissions', 'id'), (SELECT MAX(id) FROM role_permissions));
-SELECT setval(pg_get_serial_sequence('role_features', 'id'), (SELECT MAX(id) FROM role_features));
-SELECT setval(pg_get_serial_sequence('users', 'id'), (SELECT MAX(id) FROM users));
-SELECT setval(pg_get_serial_sequence('user_roles', 'id'), (SELECT MAX(id) FROM user_roles));
+-- Role permissions - Admin
+INSERT INTO role_permissions (role_id, permission_id)
+VALUES (1, 1),
+       (1, 2),
+       (1, 3),
+       (1, 4),
+       (1, 5),
+       (1, 6),
+       (1, 7),
+       (1, 8),
+       (1, 9),
+       (1, 10),
+       (1, 11),
+       (1, 12),
+       (1, 13),
+       (1, 14),
+       (1, 15),
+       (1, 16),
+       (1, 17),
+       (1, 18),
+       (1, 19),
+       (1, 20),
+       (1, 21),
+       (1, 22) ON CONFLICT DO NOTHING;
+
+-- Role permissions - User Administrator
+INSERT INTO role_permissions (role_id, permission_id)
+VALUES (2, 1),
+       (2, 2),
+       (2, 3),
+       (2, 4),
+       (2, 5),
+       (2, 6),
+       (2, 7),
+       (2, 8) ON CONFLICT DO NOTHING;
+
+-- Role permissions - Role Administrator
+INSERT INTO role_permissions (role_id, permission_id)
+VALUES (3, 8),
+       (3, 9),
+       (3, 10),
+       (3, 11),
+       (3, 12),
+       (3, 13),
+       (3, 14),
+       (3, 15),
+       (3, 16),
+       (3, 17),
+       (3, 18),
+       (3, 19),
+       (3, 20) ON CONFLICT DO NOTHING;
+
+-- Role permissions - Basic User
+INSERT INTO role_permissions (role_id, permission_id)
+VALUES (4, 1) ON CONFLICT DO NOTHING;
+
+-- Assign roles to users
+INSERT INTO user_roles (user_id, role_id, assigned_at, valid_from, status, active, created_at, created_by)
+VALUES (1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'ACTIVE', true, CURRENT_TIMESTAMP, 'system'),
+       (2, 4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'ACTIVE', true, CURRENT_TIMESTAMP,
+        'system') ON CONFLICT (user_id, role_id) DO NOTHING;

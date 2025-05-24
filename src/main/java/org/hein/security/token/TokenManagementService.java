@@ -6,6 +6,7 @@ import org.hein.api.request.auth.TokenRequestForm;
 import org.hein.api.request.auth.TokenRevokeForm;
 import org.hein.api.response.auth.TokenResponse;
 import org.hein.commons.enum_.TokenType;
+import org.hein.entity.User;
 import org.hein.service.UserService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -28,8 +29,8 @@ public class TokenManagementService {
 
 	@Transactional(readOnly = true)
 	public TokenResponse generate(TokenRequestForm form) {
-		var usernamePasswordToken = UsernamePasswordAuthenticationToken.unauthenticated(form.username(), form.password());
-		var authentication = authenticationManager.authenticate(usernamePasswordToken);
+		Authentication usernamePasswordToken = UsernamePasswordAuthenticationToken.unauthenticated(form.username(), form.password());
+		Authentication authentication = authenticationManager.authenticate(usernamePasswordToken);
 
 		SecurityContextHolder.getContext().setAuthentication(authentication);
 
@@ -38,8 +39,8 @@ public class TokenManagementService {
 
 	@Transactional(readOnly = true)
 	public TokenResponse refresh(TokenRefreshForm form) {
-		var authentication = jwtTokenParser.parse(TokenType.Refresh, form.refreshToken());
-		var username = authentication.getName();
+		Authentication authentication = jwtTokenParser.parse(TokenType.Refresh, form.refreshToken());
+		String username = authentication.getName();
 
 		jtiTokenStore.revokeTokens(username);
 
@@ -47,15 +48,15 @@ public class TokenManagementService {
 	}
 
 	private TokenResponse generateTokens(Authentication authentication) {
-		var username = authentication.getName();
-		var user = userService.findByUsername(username);
+		String username = authentication.getName();
+		User user = userService.findByUsername(username);
 
 		// Generate a new jti for refresh token
-		var accessJti = UUID.randomUUID().toString();
-		var refreshJti = UUID.randomUUID().toString();
+		String accessJti = UUID.randomUUID().toString();
+		String refreshJti = UUID.randomUUID().toString();
 
-		var accessToken = jwtTokenGenerator.generateAccessToken(authentication, accessJti);
-		var refreshToken = jwtTokenGenerator.generateRefreshToken(authentication, refreshJti);
+		String accessToken = jwtTokenGenerator.generateAccessToken(authentication, accessJti);
+		String refreshToken = jwtTokenGenerator.generateRefreshToken(authentication, refreshJti);
 
 		jtiTokenStore.storeAccessJti(accessJti, username);
 		jtiTokenStore.storeRefreshJti(refreshJti, username);

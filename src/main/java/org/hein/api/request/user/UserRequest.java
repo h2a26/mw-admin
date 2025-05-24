@@ -1,33 +1,58 @@
 package org.hein.api.request.user;
 
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 
+import java.util.Collections;
 import java.util.Set;
 
+/**
+ * Request DTO for updating an existing user
+ */
+/**
+ * Request DTO for updating an existing user
+ */
 public record UserRequest(
-        @NotBlank(message = "Username is required.")
-        @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters.")
-        String username,
-
-        @NotBlank(message = "Password is required.")
-        @Size(min = 8, message = "Password must be at least 8 characters.")
-        String password,
-
-        @NotBlank(message = "Email is required.")
-        @Email(message = "Email must be valid.")
-        String email,
-
-        @NotBlank(message = "First name is required.")
-        @Size(max = 100, message = "First name cannot exceed 100 characters.")
+        @Size(min = 1, max = 100, message = "First name must be between 1 and 100 characters")
         String firstName,
-
-        @NotBlank(message = "Last name is required.")
-        @Size(max = 100, message = "Last name cannot exceed 100 characters.")
+        
+        @Size(min = 1, max = 100, message = "Last name must be between 1 and 100 characters")
         String lastName,
-
-        @NotEmpty(message = "At least one role must be assigned.")
-        Set<Long> roleIds
-) {}
+        
+        @Email(message = "Invalid email format")
+        @Size(max = 100, message = "Email cannot exceed 100 characters")
+        String email,
+        
+        @Size(max = 20, message = "Mobile phone cannot exceed 20 characters")
+        String mobilePhone,
+        
+        String password,
+        
+        Boolean twoFactorEnabled,
+        
+        Boolean enabled,
+        
+        Boolean locked,
+        
+        Boolean systemAccount,
+        
+        Set<Long> roleIds,
+        
+        Set<Long> directPermissionIds,
+        
+        Integer passwordExpiryDays
+) {
+    /**
+     * Get the role IDs, returning an empty set if null
+     */
+    public Set<Long> getRoleIds() {
+        return this.roleIds != null ? this.roleIds : Collections.emptySet();
+    }
+    
+    /**
+     * Get the direct permission IDs, returning an empty set if null
+     */
+    public Set<Long> getDirectPermissionIds() {
+        return this.directPermissionIds != null ? this.directPermissionIds : Collections.emptySet();
+    }
+}
