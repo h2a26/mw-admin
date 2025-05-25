@@ -40,7 +40,7 @@ public class UserRoleApi {
     public ResponseEntity<ApiResponse<UserRoleResponse>> assignRole(
             @Valid @RequestBody UserRoleAssignmentRequest request) {
         UserRoleResponse response = userRoleService.assignRole(request);
-        return ApiResponse.of(response, HttpStatus.CREATED, null);
+        return ApiResponse.of(response, HttpStatus.CREATED);
     }
 
     /**
@@ -53,7 +53,7 @@ public class UserRoleApi {
     public ResponseEntity<ApiResponse<Void>> removeRole(
             @PathVariable Long userId, @PathVariable Long roleId) {
         userRoleService.removeRole(userId, roleId);
-        return ApiResponse.of(null, HttpStatus.NO_CONTENT, null);
+        return ApiResponse.of(null, HttpStatus.NO_CONTENT);
     }
 
     /**
@@ -151,6 +151,6 @@ public class UserRoleApi {
             @PathVariable Long userRoleId,
             @RequestParam String revocationReason) {
         userRoleService.revokeAssignment(userRoleId, revocationReason);
-        return ApiResponse.of(null, HttpStatus.NO_CONTENT, null);
+        return ApiResponse.of(null, HttpStatus.NO_CONTENT);
     }
 }

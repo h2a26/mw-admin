@@ -35,8 +35,7 @@ import java.util.stream.Collectors;
 @NamedEntityGraph(
         name = "User.withRolesAndPermissions",
         attributeNodes = {
-            @NamedAttributeNode(value = "userRoles", subgraph = "userRoles.role"),
-            @NamedAttributeNode("directPermissions")
+            @NamedAttributeNode(value = "userRoles", subgraph = "userRoles.role")
         },
         subgraphs = {
             @NamedSubgraph(name = "userRoles.role", attributeNodes = @NamedAttributeNode("role"))
@@ -150,24 +149,6 @@ public class User extends AuditableEntity {
     @Builder.Default
     @Column(name = "system_account")
     private boolean systemAccount = false;
-    
-    /**
-     * Direct permissions assigned to this user (outside of roles)
-     * For exceptional cases where a user needs specific permissions
-     */
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "user_direct_permissions",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "permission_id"),
-            indexes = {
-                    @Index(name = "idx_user_direct_perm", columnList = "user_id,permission_id")
-            }
-    )
-    @Builder.Default
-    @BatchSize(size = 20)
-    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-    private Set<Permission> directPermissions = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
@@ -219,20 +200,6 @@ public class User extends AuditableEntity {
             return false;
         });
     }
-    
-    /**
-     * Add a direct permission to this user (outside of roles)
-     */
-    public void addDirectPermission(Permission permission) {
-        directPermissions.add(permission);
-    }
-    
-    /**
-     * Remove a direct permission from this user
-     */
-    public void removeDirectPermission(Permission permission) {
-        directPermissions.remove(permission);
-    }
 
     /**
      * Get all roles assigned to this user
@@ -248,7 +215,7 @@ public class User extends AuditableEntity {
      * Get all permissions from all roles, including inherited permissions
      */
     public Set<Permission> getPermissions() {
-        Set<Permission> allPermissions = new HashSet<>(directPermissions);
+        Set<Permission> allPermissions = new HashSet<>();
         
         // Add permissions from roles
         getRoles().forEach(role -> {
@@ -263,12 +230,6 @@ public class User extends AuditableEntity {
      * Check if this user has a specific permission
      */
     public boolean hasPermission(String permissionName) {
-        // Check direct permissions first for efficiency
-        if (directPermissions.stream()
-                .anyMatch(permission -> permission.getPermissionName().equals(permissionName))) {
-            return true;
-        }
-        
         // Check role permissions
         return getRoles().stream()
                 .anyMatch(role -> role.hasPermission(permissionName));
@@ -280,12 +241,7 @@ public class User extends AuditableEntity {
     public boolean hasAnyPermission(Set<String> permissionNames) {
         // Get all permission names for more efficient checking
         Set<String> userPermissionNames = new HashSet<>();
-        
-        // Add direct permission names
-        directPermissions.forEach(permission -> 
-            userPermissionNames.add(permission.getPermissionName())
-        );
-        
+
         // Add role permission names
         getRoles().forEach(role -> 
             role.getAllPermissions().forEach(permission -> 

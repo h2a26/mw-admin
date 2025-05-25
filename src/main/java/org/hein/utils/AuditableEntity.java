@@ -36,5 +36,5 @@ public abstract class AuditableEntity {
     private String createdBy;
 
     @LastModifiedBy
-    private String modifiedBy;
+    private String updatedBy;
 }

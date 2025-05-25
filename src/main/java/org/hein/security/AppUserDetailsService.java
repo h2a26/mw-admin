@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class AppUserDetailsService implements UserDetailsService {
 
 	private final UserService userService;

@@ -22,7 +22,6 @@ public record UserWithPermissionsResponse(
         boolean locked,
         boolean twoFactorEnabled,
         Set<RoleResponse> roles,
-        Set<PermissionResponse> directPermissions,
         Set<PermissionResponse> allPermissions,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
@@ -34,11 +33,6 @@ public record UserWithPermissionsResponse(
         if (user == null) {
             return null;
         }
-        
-        // Get direct permissions
-        Set<PermissionResponse> directPermissionResponses = user.getDirectPermissions().stream()
-                .map(PermissionResponse::fromEntity)
-                .collect(Collectors.toSet());
         
         // Get all permissions (direct + role-based)
         Set<PermissionResponse> allPermissionResponses = user.getPermissions().stream()
@@ -59,7 +53,6 @@ public record UserWithPermissionsResponse(
                         .filter(UserRole::isValid)
                         .map(ur -> RoleResponse.fromEntity(ur.getRole(), true, false)) // Include role permissions
                         .collect(Collectors.toSet()),
-                directPermissionResponses,
                 allPermissionResponses,
                 user.getCreatedAt(),
                 user.getUpdatedAt()

@@ -45,9 +45,7 @@ public record UserCreateRequest(
         Boolean systemAccount,
         
         Set<Long> roleIds,
-        
-        Set<Long> directPermissionIds,
-        
+
         Integer passwordExpiryDays
 ) {
     /**
@@ -75,11 +73,5 @@ public record UserCreateRequest(
     public Set<Long> getRoleIds() {
         return this.roleIds != null ? this.roleIds : Collections.emptySet();
     }
-    
-    /**
-     * Get the direct permission IDs, returning an empty set if null
-     */
-    public Set<Long> getDirectPermissionIds() {
-        return this.directPermissionIds != null ? this.directPermissionIds : Collections.emptySet();
-    }
+
 }

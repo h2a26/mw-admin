@@ -1,5 +1,6 @@
 package org.hein.repository;
 
+import org.hein.entity.Action;
 import org.hein.entity.Permission;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -16,7 +17,7 @@ public interface PermissionRepository extends JpaRepository<Permission, Long> {
     /**
      * Check if a permission exists with the given feature ID and action
      */
-    boolean existsByFeatureIdAndAction(Long featureId, String action);
+    boolean existsByFeatureIdAndAction(Long featureId, Action action);
     
     /**
      * Find permissions by feature ID

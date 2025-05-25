@@ -3,13 +3,13 @@
 -- Admin user (password: admin123)
 INSERT INTO users (id, username, first_name, last_name, password, email, system_account, created_at, created_by)
 VALUES (1, 'admin', 'System', 'Administrator',
-        '$2a$12$7OfRpzK1QqOctMmO5M9s1efwvMdcqemWZGr4dOO8XMjQo5sJ.AyEq',
+        '$2a$12$.Na/CIFwozKPgoW5rcUzH.0dN0TDOS/Jktl2JmhoX8mnAT4K2eSYa',
         'admin@example.com', true, CURRENT_TIMESTAMP, 'system') ON CONFLICT (id) DO NOTHING;
 
 -- Basic user (password: user123)
 INSERT INTO users (id, username, first_name, last_name, password, email, created_at, created_by)
 VALUES (2, 'user', 'Basic', 'User',
-        '$2a$12$RsU9uzHCgFMgq5.UMpwsreXwC5Z0YxuMM.to20VBzPK.PxJYQAJEK',
+        '$2a$12$UzTWzW0a7XtyXIlPdvnFJO9Rx0s2FZajuU3Ppg4BWN2UAGwK2bMdG',
         'user@example.com', CURRENT_TIMESTAMP, 'system') ON CONFLICT (id) DO NOTHING;
 
 -- Core features
@@ -127,3 +127,10 @@ INSERT INTO user_roles (user_id, role_id, assigned_at, valid_from, status, activ
 VALUES (1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'ACTIVE', true, CURRENT_TIMESTAMP, 'system'),
        (2, 4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'ACTIVE', true, CURRENT_TIMESTAMP,
         'system') ON CONFLICT (user_id, role_id) DO NOTHING;
+
+
+-- Reset sequences to avoid duplicate key violations
+SELECT setval(pg_get_serial_sequence('users', 'id'), COALESCE((SELECT MAX(id) FROM users), 1), true);
+SELECT setval(pg_get_serial_sequence('features', 'id'), COALESCE((SELECT MAX(id) FROM features), 1), true);
+SELECT setval(pg_get_serial_sequence('permissions', 'id'), COALESCE((SELECT MAX(id) FROM permissions), 1), true);
+SELECT setval(pg_get_serial_sequence('roles', 'id'), COALESCE((SELECT MAX(id) FROM roles), 1), true);

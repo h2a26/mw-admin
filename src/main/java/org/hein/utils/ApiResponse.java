@@ -30,10 +30,19 @@ public class ApiResponse<T> {
         this.errorCode = errorCode;
         this.payload = payload;
     }
+    public static <T> ResponseEntity<ApiResponse<T>> of() {
+        ApiResponse<T> body = new ApiResponse<>(null, HttpStatus.OK, null);
+        return new ResponseEntity<>(body, HttpStatus.OK);
+    }
 
     public static <T> ResponseEntity<ApiResponse<T>> of(T data) {
         ApiResponse<T> body = new ApiResponse<>(data, HttpStatus.OK, null);
         return new ResponseEntity<>(body, HttpStatus.OK);
+    }
+
+    public static <T> ResponseEntity<ApiResponse<T>> of(T data, HttpStatus httpStatus) {
+        ApiResponse<T> body = new ApiResponse<>(data, httpStatus, null);
+        return new ResponseEntity<>(body, httpStatus);
     }
 
     public static <T> ResponseEntity<ApiResponse<T>> of(T data, HttpStatus httpStatus, String errorCode) {

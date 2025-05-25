@@ -74,13 +74,7 @@ public class UserServiceImpl implements UserService {
                 savedUser.getUserRoles().add(userRole);
             }
         }
-        
-        // Assign direct permissions if specified
-        if (!request.getDirectPermissionIds().isEmpty()) {
-            List<Permission> permissions = permissionRepository.findAllById(request.getDirectPermissionIds());
-            savedUser.setDirectPermissions(new HashSet<>(permissions));
-        }
-        
+
         // Save again with roles and permissions
         User finalUser = userRepository.save(savedUser);
         return UserResponse.fromEntity(finalUser);
@@ -182,15 +176,6 @@ public class UserServiceImpl implements UserService {
                 user.getUserRoles().removeIf(userRole -> 
                         rolesToRemove.contains(userRole.getRole().getId()));
             }
-        }
-        
-        // Handle direct permissions if specified
-        if (request.directPermissionIds() != null) {
-            Set<Permission> permissions = new HashSet<>();
-            if (!request.getDirectPermissionIds().isEmpty()) {
-                permissions.addAll(permissionRepository.findAllById(request.getDirectPermissionIds()));
-            }
-            user.setDirectPermissions(permissions);
         }
         
         User updatedUser = userRepository.save(user);
@@ -295,12 +280,7 @@ public class UserServiceImpl implements UserService {
         if (permissions.size() != permissionIds.size()) {
             throw new EntityNotFoundException("Some permissions were not found");
         }
-        
-        // Add to existing permissions
-        Set<Permission> currentPermissions = user.getDirectPermissions();
-        currentPermissions.addAll(permissions);
-        user.setDirectPermissions(currentPermissions);
-        
+
         User updatedUser = userRepository.save(user);
         return UserResponse.fromEntity(updatedUser);
     }
@@ -311,11 +291,7 @@ public class UserServiceImpl implements UserService {
     public UserResponse removeDirectPermissions(Long userId, Set<Long> permissionIds) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found: " + userId));
-        
-        // Remove the specified permissions
-        user.getDirectPermissions().removeIf(permission -> 
-                permissionIds.contains(permission.getId()));
-        
+
         User updatedUser = userRepository.save(user);
         return UserResponse.fromEntity(updatedUser);
     }

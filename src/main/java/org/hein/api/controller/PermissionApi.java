@@ -35,11 +35,10 @@ public class PermissionApi {
     @PostMapping
     @Operation(summary = "Create a new permission")
     @PreAuthorize("hasAuthority('permissions:CREATE')")
-    @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<ApiResponse<PermissionResponse>> create(
             @Valid @RequestBody PermissionCreateRequest request) {
         PermissionResponse response = permissionService.create(request);
-        return ApiResponse.of(response, HttpStatus.CREATED, null);
+        return ApiResponse.of(response, HttpStatus.CREATED);
     }
 
     /**
@@ -61,10 +60,9 @@ public class PermissionApi {
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a permission")
     @PreAuthorize("hasAuthority('permissions:DELETE')")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         permissionService.deleteById(id);
-        return ApiResponse.of(null, HttpStatus.NO_CONTENT, null);
+        return ApiResponse.of();
     }
 
     /**

@@ -64,7 +64,7 @@ public class UserApi {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         userService.deleteById(id);
-        return ApiResponse.of(null, HttpStatus.NO_CONTENT, null);
+        return ApiResponse.of(null, HttpStatus.NO_CONTENT);
     }
 
     /**

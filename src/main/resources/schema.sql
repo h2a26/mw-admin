@@ -1,6 +1,4 @@
 -- Drop tables in reverse order of dependencies to avoid foreign key constraint errors
-DROP TABLE IF EXISTS role_feature_actions;
-DROP TABLE IF EXISTS role_features;
 DROP TABLE IF EXISTS user_permissions;
 DROP TABLE IF EXISTS role_permissions;
 DROP TABLE IF EXISTS user_roles;
@@ -33,7 +31,8 @@ CREATE TABLE IF NOT EXISTS users
     created_at             TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by             VARCHAR(50),
     updated_at             TIMESTAMP,
-    updated_by             VARCHAR(50)
+    updated_by             VARCHAR(50),
+    version     BIGINT       NOT NULL DEFAULT 0
 );
 
 -- Create features table with hierarchical support
@@ -51,6 +50,7 @@ CREATE TABLE IF NOT EXISTS features
     created_by    VARCHAR(50),
     updated_at    TIMESTAMP,
     updated_by    VARCHAR(50),
+    version     BIGINT       NOT NULL DEFAULT 0,
     FOREIGN KEY (parent_id) REFERENCES features (id) ON DELETE SET NULL
 );
 
@@ -70,6 +70,7 @@ CREATE TABLE IF NOT EXISTS roles
     created_by   VARCHAR(50),
     updated_at   TIMESTAMP,
     updated_by   VARCHAR(50),
+    version     BIGINT       NOT NULL DEFAULT 0,
     FOREIGN KEY (parent_id) REFERENCES roles (id) ON DELETE SET NULL
 );
 
@@ -86,6 +87,7 @@ CREATE TABLE IF NOT EXISTS permissions
     created_by        VARCHAR(50),
     updated_at        TIMESTAMP,
     updated_by        VARCHAR(50),
+    version     BIGINT       NOT NULL DEFAULT 0,
     FOREIGN KEY (feature_id) REFERENCES features (id) ON DELETE CASCADE,
     UNIQUE (feature_id, action)
 );
@@ -127,6 +129,7 @@ CREATE TABLE IF NOT EXISTS user_roles
     created_by          VARCHAR(50),
     updated_at          TIMESTAMP,
     updated_by          VARCHAR(50),
+    version     BIGINT       NOT NULL DEFAULT 0,
     UNIQUE (user_id, role_id),
     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
     FOREIGN KEY (role_id) REFERENCES roles (id) ON DELETE CASCADE,

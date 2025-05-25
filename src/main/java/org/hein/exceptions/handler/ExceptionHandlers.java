@@ -1,5 +1,6 @@
 package org.hein.exceptions.handler;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.hein.exceptions.*;
 import org.hein.utils.ApiResponse;
@@ -89,6 +90,13 @@ public class ExceptionHandlers {
 	@ResponseStatus(HttpStatus.NOT_FOUND)
 	public ResponseEntity<ApiResponse<List<String>>> handle(IllegalArgumentException e) {
 		log.error("Illegal state", e);
+		return ApiResponse.of(List.of(e.getMessage()), HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.getReasonPhrase().toUpperCase());
+	}
+
+	@ExceptionHandler(EntityNotFoundException.class)
+	@ResponseStatus(HttpStatus.NOT_FOUND)
+	public ResponseEntity<ApiResponse<List<String>>> handle(EntityNotFoundException e) {
+		log.warn("Entity not found: {}", e.getMessage());
 		return ApiResponse.of(List.of(e.getMessage()), HttpStatus.NOT_FOUND, HttpStatus.NOT_FOUND.getReasonPhrase().toUpperCase());
 	}
 

@@ -37,7 +37,8 @@ public class PermissionServiceImpl implements PermissionService {
                 .orElseThrow(() -> new EntityNotFoundException("Feature not found: " + request.featureId()));
         
         // Check if permission with same feature and action already exists
-        if (permissionRepository.existsByFeatureIdAndAction(request.featureId(), request.action())) {
+        Action actionEnum = Action.valueOf(request.action().toUpperCase());
+        if (permissionRepository.existsByFeatureIdAndAction(request.featureId(), actionEnum)) {
             throw new IllegalStateException("Permission already exists for feature " + feature.getName() + " and action " + request.action());
         }
         

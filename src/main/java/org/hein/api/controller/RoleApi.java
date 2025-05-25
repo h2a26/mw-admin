@@ -39,7 +39,7 @@ public class RoleApi {
     public ResponseEntity<ApiResponse<RoleResponse>> create(
             @Valid @RequestBody RoleCreateRequest request) {
         RoleResponse response = roleService.create(request);
-        return ApiResponse.of(response, HttpStatus.CREATED, null);
+        return ApiResponse.of(response, HttpStatus.CREATED);
     }
 
     /**
@@ -64,7 +64,7 @@ public class RoleApi {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         roleService.deleteById(id);
-        return ApiResponse.of(null, HttpStatus.NO_CONTENT, null);
+        return ApiResponse.of(null, HttpStatus.NO_CONTENT);
     }
 
     /**

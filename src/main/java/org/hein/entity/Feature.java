@@ -29,11 +29,7 @@ public class Feature extends AuditableEntity {
 
     @Column(nullable = false, unique = true, length = 50)
     private String name;
-    
-    /**
-     * A unique code for programmatic reference, typically lowercase with underscores
-     */
-    @NaturalId
+
     @Column(nullable = false, unique = true, length = 50)
     private String code;
 

@@ -43,6 +43,6 @@ public class AuthApi {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public ResponseEntity<ApiResponse<Void>> logout(@Valid @RequestBody TokenRevokeForm form) {
         tokenService.revoke(form);
-        return ApiResponse.of(null, HttpStatus.NO_CONTENT, null);
+        return ApiResponse.of();
     }
 }
