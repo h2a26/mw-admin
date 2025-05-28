@@ -57,17 +57,7 @@ public interface UserService {
      * Remove roles from a user
      */
     UserResponse removeRoles(Long userId, Set<Long> roleIds);
-    
-    /**
-     * Assign direct permissions to a user (outside of roles)
-     */
-    UserResponse assignDirectPermissions(Long userId, Set<Long> permissionIds);
-    
-    /**
-     * Remove direct permissions from a user
-     */
-    UserResponse removeDirectPermissions(Long userId, Set<Long> permissionIds);
-    
+
     /**
      * Change a user's password
      */

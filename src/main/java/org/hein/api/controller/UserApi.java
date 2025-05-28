@@ -112,31 +112,7 @@ public class UserApi {
         UserResponse response = userService.removeRoles(id, roleIds);
         return ApiResponse.of(response);
     }
-    
-    /**
-     * Assign direct permissions to a user
-     */
-    @PostMapping("/{id}/permissions")
-    @Operation(summary = "Assign direct permissions to a user")
-    @PreAuthorize("hasAuthority('users:ASSIGN_PERMISSION')")
-    public ResponseEntity<ApiResponse<UserResponse>> assignDirectPermissions(
-            @PathVariable Long id, @RequestBody Set<Long> permissionIds) {
-        UserResponse response = userService.assignDirectPermissions(id, permissionIds);
-        return ApiResponse.of(response);
-    }
-    
-    /**
-     * Remove direct permissions from a user
-     */
-    @DeleteMapping("/{id}/permissions")
-    @Operation(summary = "Remove direct permissions from a user")
-    @PreAuthorize("hasAuthority('users:REMOVE_PERMISSION')")
-    public ResponseEntity<ApiResponse<UserResponse>> removeDirectPermissions(
-            @PathVariable Long id, @RequestBody Set<Long> permissionIds) {
-        UserResponse response = userService.removeDirectPermissions(id, permissionIds);
-        return ApiResponse.of(response);
-    }
-    
+
     /**
      * Enable or disable a user account
      */

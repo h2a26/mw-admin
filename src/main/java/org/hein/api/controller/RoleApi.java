@@ -35,7 +35,6 @@ public class RoleApi {
     @PostMapping
     @Operation(summary = "Create a new role")
     @PreAuthorize("hasAuthority('roles:CREATE')")
-    @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<ApiResponse<RoleResponse>> create(
             @Valid @RequestBody RoleCreateRequest request) {
         RoleResponse response = roleService.create(request);
@@ -61,10 +60,9 @@ public class RoleApi {
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a role")
     @PreAuthorize("hasAuthority('roles:DELETE')")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         roleService.deleteById(id);
-        return ApiResponse.of(null, HttpStatus.NO_CONTENT);
+        return ApiResponse.of();
     }
 
     /**
@@ -94,7 +92,7 @@ public class RoleApi {
         List<RoleResponse> roles = roleService.findAll(topLevelOnly, includePermissions, includeChildRoles);
         return ApiResponse.of(roles);
     }
-    
+
     /**
      * Get child roles for a specific role
      */
@@ -105,7 +103,7 @@ public class RoleApi {
         List<RoleResponse> childRoles = roleService.findChildRoles(id);
         return ApiResponse.of(childRoles);
     }
-    
+
     /**
      * Move a role to be a child of another role
      */
@@ -117,7 +115,7 @@ public class RoleApi {
         RoleResponse response = roleService.moveToParent(id, parentId);
         return ApiResponse.of(response);
     }
-    
+
     /**
      * Remove parent relationship, making this a top-level role
      */
@@ -128,7 +126,7 @@ public class RoleApi {
         RoleResponse response = roleService.removeParent(id);
         return ApiResponse.of(response);
     }
-    
+
     /**
      * Add permissions to a role
      */
@@ -140,7 +138,7 @@ public class RoleApi {
         RoleResponse response = roleService.addPermissions(id, permissionIds);
         return ApiResponse.of(response);
     }
-    
+
     /**
      * Remove permissions from a role
      */
@@ -152,7 +150,7 @@ public class RoleApi {
         RoleResponse response = roleService.removePermissions(id, permissionIds);
         return ApiResponse.of(response);
     }
-    
+
     /**
      * Toggle role enabled status
      */
@@ -163,7 +161,7 @@ public class RoleApi {
         RoleResponse response = roleService.toggleStatus(id);
         return ApiResponse.of(response);
     }
-    
+
     /**
      * Find roles that will expire within a specified number of days
      */

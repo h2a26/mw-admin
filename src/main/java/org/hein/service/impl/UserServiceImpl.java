@@ -271,33 +271,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    @CacheEvict(value = {"users", "user-roles"}, allEntries = true)
-    public UserResponse assignDirectPermissions(Long userId, Set<Long> permissionIds) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found: " + userId));
-        
-        List<Permission> permissions = permissionRepository.findAllById(permissionIds);
-        if (permissions.size() != permissionIds.size()) {
-            throw new EntityNotFoundException("Some permissions were not found");
-        }
-
-        User updatedUser = userRepository.save(user);
-        return UserResponse.fromEntity(updatedUser);
-    }
-
-    @Override
-    @Transactional
-    @CacheEvict(value = {"users", "user-roles"}, allEntries = true)
-    public UserResponse removeDirectPermissions(Long userId, Set<Long> permissionIds) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found: " + userId));
-
-        User updatedUser = userRepository.save(user);
-        return UserResponse.fromEntity(updatedUser);
-    }
-
-    @Override
-    @Transactional
     public void changePassword(Long userId, String currentPassword, String newPassword) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found: " + userId));
